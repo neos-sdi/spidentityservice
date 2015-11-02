@@ -1,0 +1,5 @@
+C:\Users\speschka\Documents\Visual Studio 2008\Projects\SqlClaimsProvider\SqlClaimsProvider\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\speschka\Documents\Visual Studio 2008\Projects\SqlClaimsProvider\SqlClaimsProvider\bin\Debug\SqlClaimsProvider.dll
+C:\Users\speschka\Documents\Visual Studio 2008\Projects\SqlClaimsProvider\SqlClaimsProvider\bin\Debug\SqlClaimsProvider.pdb
+C:\Users\speschka\Documents\Visual Studio 2008\Projects\SqlClaimsProvider\SqlClaimsProvider\obj\Debug\SqlClaimsProvider.dll
+C:\Users\speschka\Documents\Visual Studio 2008\Projects\SqlClaimsProvider\SqlClaimsProvider\obj\Debug\SqlClaimsProvider.pdb

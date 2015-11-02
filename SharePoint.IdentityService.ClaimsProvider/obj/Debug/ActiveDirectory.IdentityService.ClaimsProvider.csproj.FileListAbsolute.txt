@@ -1,0 +1,6 @@
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\bin\Debug\ActiveDirectory.IdentityService.ClaimsProvider.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\bin\Debug\ActiveDirectory.IdentityService.ClaimsProvider.pdb
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\obj\Debug\ActiveDirectory.IdentityService.ClaimsProvider.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.ClaimsProvider\obj\Debug\ActiveDirectory.IdentityService.ClaimsProvider.pdb

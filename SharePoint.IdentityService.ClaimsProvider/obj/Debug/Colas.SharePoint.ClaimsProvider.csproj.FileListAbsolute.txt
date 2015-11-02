@@ -1,0 +1,12 @@
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Colas.SharePoint.ClaimsProvider.dll
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Colas.SharePoint.ClaimsProvider.pdb
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\Colas.SharePoint.ClaimsProvider.dll
+C:\Projects\MTC2010\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\Colas.SharePoint.ClaimsProvider.pdb
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Colas.SharePoint.ClaimsProvider.dll
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Colas.SharePoint.ClaimsProvider.pdb
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\Colas.SharePoint.ClaimsProvider.dll
+C:\Projects\MTC2010\Colas\Colas.Claims.Provider.Source\Colas\Colas.SharePoint.ClaimsProvider\obj\Debug\Colas.SharePoint.ClaimsProvider.pdb

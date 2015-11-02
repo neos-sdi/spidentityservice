@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ps:Config
+    xmlns:ps="urn:Microsoft.SharePoint.PowerShell"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:Microsoft.SharePoint.PowerShell  SPCmdletSchema.xsd">
+  <ps:Assembly Name="SharePoint.IdentityService.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ad9787278992c174">
+    <ps:Cmdlet>
+      <ps:VerbName>Install-IdentityService</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.InstallIdentityService</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Repair-IdentityService</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.RepairIdentityService</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Upgrade-IdentityServiceDatabases</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.UpgradeIdentityServiceDatabases</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>New-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.NewIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Set-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.SetIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Get-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.GetIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Remove-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.RemoveIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Reset-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.ResetIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>Reload-IdentityServiceApplication</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.ReloadIdentityServiceApplication</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>    
+  </ps:Assembly>
+  <ps:Assembly Name="SharePoint.IdentityService.Proxy, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ad9787278992c174">
+    <ps:Cmdlet>
+      <ps:VerbName>New-IdentityServiceProxy</ps:VerbName>
+      <ps:ClassName>SharePoint.IdentityService.PowerShell.NewIdentityServiceProxy</ps:ClassName>
+      <ps:HelpFile>SharePoint.IdentityService.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+  </ps:Assembly>
+</ps:Config>

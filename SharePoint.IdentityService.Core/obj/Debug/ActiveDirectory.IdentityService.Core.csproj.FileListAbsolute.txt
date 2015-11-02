@@ -1,0 +1,5 @@
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Core\bin\Debug\ActiveDirectory.IdentityService.Core.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Core\bin\Debug\ActiveDirectory.IdentityService.Core.pdb
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Core\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Core\obj\Debug\ActiveDirectory.IdentityService.Core.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Core\obj\Debug\ActiveDirectory.IdentityService.Core.pdb

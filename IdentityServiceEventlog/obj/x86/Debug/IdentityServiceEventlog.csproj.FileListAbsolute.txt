@@ -1,0 +1,10 @@
+C:\Projects\MTC2010\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.exe
+C:\Projects\MTC2010\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.pdb
+C:\Projects\MTC2010\AD Idnetity Service\IdentityServiceEventlog\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\AD Idnetity Service\IdentityServiceEventlog\obj\x86\Debug\IdentityServiceEventlog.exe
+C:\Projects\MTC2010\AD Idnetity Service\IdentityServiceEventlog\obj\x86\Debug\IdentityServiceEventlog.pdb
+C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.exe.config
+C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.exe
+C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.pdb
+C:\Projets\AD Idnetity Service\IdentityServiceEventlog\obj\x86\Debug\IdentityServiceEventlog.exe
+C:\Projets\AD Idnetity Service\IdentityServiceEventlog\obj\x86\Debug\IdentityServiceEventlog.pdb

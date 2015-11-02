@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Solution xmlns="http://schemas.microsoft.com/sharepoint/" Title="SharePoint Identity Service Application" SolutionId="bd117888-9200-404c-a422-8d13f4405116" ResetWebServer="TRUE" DeploymentServerType="ApplicationServer" SharePointProductVersion="15.0">
+  <Assemblies>
+    <Assembly Location="SharePoint.IdentityService.ActiveDirectory.dll" DeploymentTarget="GlobalAssemblyCache" />
+    <Assembly Location="SharePoint.IdentityService.Core.dll" DeploymentTarget="GlobalAssemblyCache" />
+    <Assembly Location="SharePoint.IdentityService.Proxy.dll" DeploymentTarget="GlobalAssemblyCache" />
+    <Assembly Location="SharePoint.IdentityService.ClaimsProvider.dll" DeploymentTarget="GlobalAssemblyCache" />
+    <Assembly Location="SharePoint.IdentityService.Application.dll" DeploymentTarget="GlobalAssemblyCache" />
+  </Assemblies>
+  <RootFiles>
+    <RootFile Location="WebClients\SharePoint.IdentityService\client.config" />
+    <RootFile Location="CONFIG\POWERSHELL\Registration\SharePoint.IdentityService.Cmdlets.xml" />
+    <RootFile Location="WebServices\SharePoint.IdentityService\web.config" />
+    <RootFile Location="WebServices\SharePoint.IdentityService\SharePoint.IdentityService.svc" />
+    <RootFile Location="Resources\SharePoint.IdentityService.Application.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.Application.fr-fr.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.ClaimsProvider.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.ClaimsProvider.fr-fr.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.ActiveDirectory.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.ActiveDirectory.fr-fr.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.Administration.resx" />
+    <RootFile Location="Resources\SharePoint.IdentityService.Administration.fr-fr.resx" />
+  </RootFiles>
+  <TemplateFiles>
+    <TemplateFile Location="SQL\SharePoint.IdentityService.sql" />
+    <TemplateFile Location="SQL\SharePoint.IdentityService.Upgrade.sql" />
+    <TemplateFile Location="ADMIN\SharePoint.IdentityService\serviceapp.aspx" />
+    <TemplateFile Location="LAYOUTS\SharePoint.IdentityService\manageapp.aspx" />
+    <TemplateFile Location="LAYOUTS\SharePoint.IdentityService\manageconnections.aspx" />
+    <TemplateFile Location="LAYOUTS\SharePoint.IdentityService\managedlls.aspx" />
+    <TemplateFile Location="LAYOUTS\SharePoint.IdentityService\manageentities.aspx" />
+    <TemplateFile Location="LAYOUTS\SharePoint.IdentityService\manageparams.aspx" />
+  </TemplateFiles>
+</Solution>

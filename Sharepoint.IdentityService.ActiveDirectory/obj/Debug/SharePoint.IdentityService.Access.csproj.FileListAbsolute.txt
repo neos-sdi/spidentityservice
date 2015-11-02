@@ -1,0 +1,3 @@
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Access\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Access\obj\Debug\ActiveDirectory.IdentityService.Access.dll
+C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Access\obj\Debug\ActiveDirectory.IdentityService.Access.pdb
