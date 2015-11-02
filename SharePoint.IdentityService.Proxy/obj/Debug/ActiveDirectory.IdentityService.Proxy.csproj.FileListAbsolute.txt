@@ -1,6 +1,0 @@
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\bin\Debug\ActiveDirectory.IdentityService.Proxy.dll
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\bin\Debug\ActiveDirectory.IdentityService.Proxy.pdb
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\obj\Debug\ResolveAssemblyReference.cache
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\obj\Debug\ActiveDirectory.IdentityService.Proxy.dll
-C:\Projects\MTC2010\AD Idnetity Service\ActiveDirectory.IdentityService.Proxy\obj\Debug\ActiveDirectory.IdentityService.Proxy.pdb

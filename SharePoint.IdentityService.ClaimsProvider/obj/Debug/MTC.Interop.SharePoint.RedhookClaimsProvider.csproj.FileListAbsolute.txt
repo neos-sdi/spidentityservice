@@ -1,6 +1,0 @@
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\obj\Debug\ResolveAssemblyReference.cache
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\bin\Debug\MTC.Interop.SharePoint.RedhookClaimsProvider.dll
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\bin\Debug\MTC.Interop.SharePoint.RedhookClaimsProvider.pdb
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\obj\Debug\MTC.Interop.SharePoint.RedhookClaimsProvider.dll
-C:\Projects\MTC2010\MTC.Interop.SharePoint.RedhookClaimsProvider\obj\Debug\MTC.Interop.SharePoint.RedhookClaimsProvider.pdb
