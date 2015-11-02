@@ -1,6 +1,0 @@
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\bin\Debug\ActiveDirectory.IdentityServiceApplication.dll
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\bin\Debug\ActiveDirectory.IdentityServiceApplication.pdb
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\bin\Debug\Microsoft.Sharepoint.Sandbox.dll
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\obj\Debug\ResolveAssemblyReference.cache
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\obj\Debug\ActiveDirectory.IdentityServiceApplication.dll
-C:\Projects\Sridhar\SridharServiceApplication\SridharServiceApplication\obj\Debug\ActiveDirectory.IdentityServiceApplication.pdb

@@ -1,5 +1,0 @@
-C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.exe.config
-C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.exe
-C:\Projets\AD Idnetity Service\IdentityServiceEventlog\bin\Debug\IdentityServiceEventlog.pdb
-C:\Projets\AD Idnetity Service\IdentityServiceEventlog\obj\Debug\IdentityServiceEventlog.exe
-C:\Projets\AD Idnetity Service\IdentityServiceEventlog\obj\Debug\IdentityServiceEventlog.pdb

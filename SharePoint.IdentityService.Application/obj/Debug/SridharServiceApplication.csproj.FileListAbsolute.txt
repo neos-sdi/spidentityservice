@@ -1,5 +1,0 @@
-C:\dev\code\SridharServiceApplication\SridharServiceApplication\bin\Debug\Microsoft.Test.SridharServiceApplication.dll
-C:\dev\code\SridharServiceApplication\SridharServiceApplication\bin\Debug\Microsoft.Test.SridharServiceApplication.pdb
-C:\dev\code\SridharServiceApplication\SridharServiceApplication\obj\Debug\ResolveAssemblyReference.cache
-C:\dev\code\SridharServiceApplication\SridharServiceApplication\obj\Debug\Microsoft.Test.SridharServiceApplication.dll
-C:\dev\code\SridharServiceApplication\SridharServiceApplication\obj\Debug\Microsoft.Test.SridharServiceApplication.pdb
