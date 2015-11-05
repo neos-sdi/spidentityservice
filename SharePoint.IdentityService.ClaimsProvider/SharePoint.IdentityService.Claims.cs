@@ -367,12 +367,28 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// <summary>
         /// ClaimTypeIdentifier property implementation
         /// </summary>
-        private string ClaimTypeIdentifier
+        private string UserClaimTypeIdentifier
         {
             get 
             {
                 return this._useridentityclaim;
             }
+        }
+
+        /// <summary>
+        /// RoleClaimTypeIdentifier property implementation
+        /// </summary>
+        private string RoleClaimTypeIdentifier
+        {
+            get
+            {
+                return this._roleidentityclaim;
+            }
+        }
+
+        private bool IsRoleClaimGroupSID()
+        {
+            return this._roleidentityclaim.ToLowerInvariant().Equals("http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid");
         }
 
         #region FillSearch
@@ -493,7 +509,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                         string keyword = resolveInput.Value.ToLowerInvariant();
                         string kclaim = resolveInput.ClaimType.ToLowerInvariant();
 
-                        if ( !kclaim.Equals(this.ClaimTypeIdentifier.ToLowerInvariant()) )
+                        if ( !kclaim.Equals(this.UserClaimTypeIdentifier.ToLowerInvariant()) && !kclaim.Equals(this.RoleClaimTypeIdentifier.ToLowerInvariant()))
                             return;
 
                         string kissuer = resolveInput.OriginalIssuer.Replace(SPOriginalIssuerType.TrustedProvider + ":", "");
@@ -706,7 +722,10 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 if (string.IsNullOrEmpty(IdentityValue))
                     return;
                 entity.Claim = CreateClaimForSTS(this._roleidentityclaim, IdentityValue);
-                entity.EntityType = SPClaimEntityTypes.FormsRole;
+                if (IsRoleClaimGroupSID())
+                    entity.EntityType = SPClaimEntityTypes.SecurityGroup;
+                else
+                    entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
 
@@ -933,7 +952,10 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 if (string.IsNullOrEmpty(IdentityValue))
                     return;
                 entity.Claim = CreateClaimForSTS(this._roleidentityclaim, IdentityValue);
-                entity.EntityType = SPClaimEntityTypes.FormsRole;
+                if (IsRoleClaimGroupSID())
+                    entity.EntityType = SPClaimEntityTypes.SecurityGroup;
+                else
+                    entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
 
