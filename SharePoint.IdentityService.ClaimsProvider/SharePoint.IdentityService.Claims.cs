@@ -1,5 +1,4 @@
 ﻿#define nameidentifier
-#define localization
 //******************************************************************************************************************************************************************************************//
 // Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
@@ -367,12 +366,28 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// <summary>
         /// ClaimTypeIdentifier property implementation
         /// </summary>
-        private string ClaimTypeIdentifier
+        private string UserClaimTypeIdentifier
         {
             get 
             {
                 return this._useridentityclaim;
             }
+        }
+
+        /// <summary>
+        /// RoleClaimTypeIdentifier property implementation
+        /// </summary>
+        private string RoleClaimTypeIdentifier
+        {
+            get
+            {
+                return this._roleidentityclaim;
+            }
+        }
+
+        private bool IsRoleClaimGroupSID()
+        {
+            return this._roleidentityclaim.ToLowerInvariant().Equals("http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid");
         }
 
         #region FillSearch
@@ -387,11 +402,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             if ((!EntityTypesContain(entityTypes, SPClaimEntityTypes.User)) && (!EntityTypesContain(entityTypes, SPClaimEntityTypes.Trusted)))
             {
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E07005"), searchPattern), EventLogEntryType.Warning, 7005);
-#else
-                LogEvent.Trace(string.Format("Invalid entity type in FillSerch with pattern {0}", searchPattern), EventLogEntryType.Warning, 7005);
-#endif
                 return;
             }
             try
@@ -413,11 +424,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E07000"), searchPattern), EventLogEntryType.Warning, 7000);
-#else
-                LogEvent.Log(E, string.Format("Error in FillSearch with pattern {0}", searchPattern), System.Diagnostics.EventLogEntryType.Warning, 7000);
-#endif
                 throw E;
             }
         }
@@ -476,11 +483,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             if ((!EntityTypesContain(entityTypes, SPClaimEntityTypes.User)) && (!EntityTypesContain(entityTypes, SPClaimEntityTypes.Trusted)))
             {
-#if localization
                 LogEvent.Trace(ResourcesValues.GetString("E07004"), EventLogEntryType.Warning, 7004);
-#else
-                LogEvent.Trace("Invalid entity type in FillResolve (Claims)", EventLogEntryType.Warning, 7004);
-#endif
                 return;
             }
             try
@@ -493,7 +496,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                         string keyword = resolveInput.Value.ToLowerInvariant();
                         string kclaim = resolveInput.ClaimType.ToLowerInvariant();
 
-                        if ( !kclaim.Equals(this.ClaimTypeIdentifier.ToLowerInvariant()) )
+                        if ( !kclaim.Equals(this.UserClaimTypeIdentifier.ToLowerInvariant()) && !kclaim.Equals(this.RoleClaimTypeIdentifier.ToLowerInvariant()))
                             return;
 
                         string kissuer = resolveInput.OriginalIssuer.Replace(SPOriginalIssuerType.TrustedProvider + ":", "");
@@ -510,11 +513,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E07001"), resolveInput.Value), EventLogEntryType.Warning, 7001);
-#else
-                LogEvent.Log(E, string.Format("Error in FillResolve (SPClaim) with pattern {0}", resolveInput.Value), System.Diagnostics.EventLogEntryType.Warning, 7001);
-#endif
                 throw E;
             }
         }
@@ -532,11 +531,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             if ((!EntityTypesContain(entityTypes, SPClaimEntityTypes.User)) && (!EntityTypesContain(entityTypes, SPClaimEntityTypes.Trusted)))
             {
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E07006"), resolveInput), EventLogEntryType.Warning, 7006);
-#else
-                LogEvent.Trace(string.Format("Invalid entity type in FillResolve (Text) with input : {0}", resolveInput), EventLogEntryType.Warning, 7006);
-#endif
                 return;
             }
             try
@@ -557,11 +552,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E07002"), resolveInput), EventLogEntryType.Warning, 7002);
-#else
-                LogEvent.Log(E, string.Format("Error in FillResolve (String) with pattern {0}", resolveInput), System.Diagnostics.EventLogEntryType.Warning, 7002);
-#endif
                 throw E;
             }
         }
@@ -706,7 +697,10 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 if (string.IsNullOrEmpty(IdentityValue))
                     return;
                 entity.Claim = CreateClaimForSTS(this._roleidentityclaim, IdentityValue);
-                entity.EntityType = SPClaimEntityTypes.FormsRole;
+                if (IsRoleClaimGroupSID())
+                    entity.EntityType = SPClaimEntityTypes.SecurityGroup;
+                else
+                    entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
 
@@ -933,7 +927,10 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 if (string.IsNullOrEmpty(IdentityValue))
                     return;
                 entity.Claim = CreateClaimForSTS(this._roleidentityclaim, IdentityValue);
-                entity.EntityType = SPClaimEntityTypes.FormsRole;
+                if (IsRoleClaimGroupSID())
+                    entity.EntityType = SPClaimEntityTypes.SecurityGroup;
+                else
+                    entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
 
@@ -1055,11 +1052,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
         {
             if ((!EntityTypesContain(entityTypes, SPClaimEntityTypes.User)) && (!EntityTypesContain(entityTypes, SPClaimEntityTypes.Trusted)))
             {
-#if localization
                 LogEvent.Trace(ResourcesValues.GetString("E07007"), EventLogEntryType.Warning, 7007);
-#else
-                LogEvent.Trace("Invalid entity type in FillHierachy", EventLogEntryType.Warning, 7007);
-#endif
                 return;
             }
             try
@@ -1084,21 +1077,13 @@ namespace SharePoint.IdentityService.ClaimsProvider
                             }
                         }
                         else
-#if localization
                             LogEvent.Trace(ResourcesValues.GetString("E07008"), EventLogEntryType.Warning, 7008);
-#else
-                            LogEvent.Trace("No domains founds in the repository ! please verify your configuration !", System.Diagnostics.EventLogEntryType.Warning, 7008);
-#endif
                     }
                 }
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, ResourcesValues.GetString("E07003"), EventLogEntryType.Warning, 7003);
-#else
-                LogEvent.Log(E, "Error in FillHierarchy", System.Diagnostics.EventLogEntryType.Warning, 7003);
-#endif
                 throw E;
             }
         }
