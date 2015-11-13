@@ -64,8 +64,9 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="Microsoft.SharePoint.ApplicationPages.Administration, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\Program Files\Common Files\microsoft shared\Web Server Extensions\15\CONFIG\ADMINBIN\Microsoft.SharePoint.ApplicationPages.Administration.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Common Files\microsoft shared\Web Server Extensions\15\CONFIG\ADMINBIN\Microsoft.SharePoint.ApplicationPages.Administration.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="microsoft.sharepoint.portal, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\Program Files\Common Files\Microsoft Shared\Web Server Extensions\15\ISAPI\microsoft.sharepoint.portal.dll</HintPath>
@@ -201,7 +202,6 @@
     <None Include="Layouts\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{62e26900-eb9b-4e30-af8d-8c4e8810396d}</SharePointProjectItemId>
     </None>
-    <None Include="neos-sdi.pfx" />
     <None Include="Registration\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{b728f0e8-d82b-4d21-8c5a-2b7c5660eb51}</SharePointProjectItemId>
     </None>
@@ -317,6 +317,18 @@
       <Project>{ef1ce282-c8e4-4bfa-b4b3-a494f00cd88c}</Project>
       <Name>SharePoint.IdentityService.Proxy</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\SharePoint.IdentityService.ActiveDirectory.en-us.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\SharePoint.IdentityService.Administration.en-us.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\SharePoint.IdentityService.Application.en-us.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\SharePoint.IdentityService.ClaimsProvider.en-us.resx" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>

@@ -72,7 +72,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="neos-sdi.pfx" />
     <None Include="tempsignature.snk" />
   </ItemGroup>
   <ItemGroup>

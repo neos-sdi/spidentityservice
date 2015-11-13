@@ -1,5 +1,4 @@
-﻿#define localization
-//******************************************************************************************************************************************************************************************//
+﻿//******************************************************************************************************************************************************************************************//
 // Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
@@ -154,11 +153,7 @@ namespace SharePoint.IdentityService
         /// </summary>
         public string JobDescription
         {
-#if localization
                     get { return ResourcesValues.GetString("E20101"); }
-#else
-                    get { return "This job warm up SharePoint Identity Service Applications. (for slow and weak infrastructure)"; }
-#endif               
         }
 
         /// <summary>
@@ -396,11 +391,7 @@ namespace SharePoint.IdentityService
         /// </summary>
         public string JobDescription
         {
-#if localization
-                    get { return ResourcesValues.GetString("E20102"); }
-#else
-                    get { return "This job reload all SharePoint Identity Service Applications. (for slow and weak infrastructure)"; }
-#endif               
+            get { return ResourcesValues.GetString("E20102"); }
         }
 
         /// <summary>

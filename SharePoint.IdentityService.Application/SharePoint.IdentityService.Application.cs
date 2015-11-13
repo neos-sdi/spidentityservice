@@ -1,5 +1,4 @@
-﻿#define localization
-//******************************************************************************************************************************************************************************************//
+﻿//******************************************************************************************************************************************************************************************//
 // Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
@@ -532,8 +531,7 @@ namespace SharePoint.IdentityService
                         }
                         catch (Exception E)
                         {
-                            if (_wrapper != null)
-                                _wrapper.Log(E, E.Message, EventLogEntryType.Error, 20000);
+                            LogEvent.Log(E, E.Message, EventLogEntryType.Error, 20000);
                             _wrapper = null;
                             throw E;
                         }
@@ -557,8 +555,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-                    _wrapper.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
                 throw E;
             }
             return key;
@@ -579,8 +576,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-                    _wrapper.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
                 throw E;
             }
             return data;
@@ -601,8 +597,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-                    _wrapper.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
                 throw E;
             }
             return data;
@@ -752,12 +747,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, string.Format(ResourcesValues.GetString("E20001"), pattern, domain), EventLogEntryType.Error, 20001);
-#else
-                    _wrapper.Log(E, string.Format("Error in FillSearch with pattern {0} on domain {1}",pattern, domain), EventLogEntryType.Error, 20001);
-#endif               
+                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20001"), pattern, domain), EventLogEntryType.Error, 20001);
                 return null;
             }
         }
@@ -850,12 +840,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, string.Format(ResourcesValues.GetString("E20002"), pattern), EventLogEntryType.Error, 20002);
-#else
-                    _wrapper.Log(E, string.Format("Error in FillResolve with pattern {0}", pattern), EventLogEntryType.Error, 20001);
-#endif               
+                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20002"), pattern), EventLogEntryType.Error, 20002);
                 return null;
             }
         }
@@ -875,12 +860,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                _wrapper.Log(E, string.Format(ResourcesValues.GetString("E20003"), pattern), EventLogEntryType.Error, 20003);
-#else
-                _wrapper.Log(E, string.Format("Error in FillValidate with pattern {0}", pattern), EventLogEntryType.Error, 20003);
-#endif
+                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20003"), pattern), EventLogEntryType.Error, 20003);
                 return null;
             }
         }
@@ -939,17 +919,10 @@ namespace SharePoint.IdentityService
             {
                 if (_wrapper != null)
                 {
-#if localization
                     if (!string.IsNullOrEmpty(hierarchyNodeID))
-                        _wrapper.Log(E, string.Format(ResourcesValues.GetString("E20004"), hierarchyNodeID), EventLogEntryType.Error, 20004);
+                        LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20004"), hierarchyNodeID), EventLogEntryType.Error, 20004);
                     else
-                        _wrapper.Log(E, ResourcesValues.GetString("E20004B"), EventLogEntryType.Error, 20004);
-#else
-                    if (!string.IsNullOrEmpty(hierarchyNodeID))
-                        _wrapper.Log(E, string.Format("Error in FillHierarchy with node {0}", hierarchyNodeID), EventLogEntryType.Error, 20004);
-                    else
-                        _wrapper.Log(E, "Error in FillHierarchy", EventLogEntryType.Error, 20004);
-#endif
+                        LogEvent.Log(E, ResourcesValues.GetString("E20004B"), EventLogEntryType.Error, 20004);
                 }
                 return null;
             }
@@ -970,12 +943,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, ResourcesValues.GetString("E20005"), EventLogEntryType.Error, 20005);
-#else
-                    _wrapper.Log(E, "Error in FillBadDomains ", EventLogEntryType.Error, 20005);
-#endif
+                LogEvent.Log(E, ResourcesValues.GetString("E20005"), EventLogEntryType.Error, 20005);
                 return null;
             }
 
@@ -1003,12 +971,8 @@ namespace SharePoint.IdentityService
                         }
                         catch (Exception E)
                         {
-                            if (_wrapper != null)
-#if localization
-                                _wrapper.Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
-#else
-                                _wrapper.Log(E, "Error in FillAdditionalClaims ", EventLogEntryType.Error, 20008);
-#endif
+
+                            LogEvent.Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
                         }
                     }
                     return _map;
@@ -1016,12 +980,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
-#else
-                    _wrapper.Log(E, "Error in FillAdditionalClaims ", EventLogEntryType.Error, 20008);
-#endif
+                LogEvent.Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
                 return null;
             }
         }
@@ -1040,12 +999,7 @@ namespace SharePoint.IdentityService
                 }
                 catch (Exception E)
                 {
-                    if (_wrapper != null)
-#if localization
-                        _wrapper.Log(E, ResourcesValues.GetString("E20006"), EventLogEntryType.Error, 20006);
-#else
-                        _wrapper.Log(E, "Error in Reload ", EventLogEntryType.Error, 20006);
-#endif
+                    LogEvent.Log(E, ResourcesValues.GetString("E20006"), EventLogEntryType.Error, 20006);
                     return false;
                 }
             }
@@ -1065,12 +1019,7 @@ namespace SharePoint.IdentityService
                 }
                 catch (Exception E)
                 {
-                    if (_wrapper != null)
-#if localization
-                        _wrapper.Log(E, ResourcesValues.GetString("E20006"), EventLogEntryType.Error, 20006);
-#else
-                        _wrapper.Log(E, "Error in Reload ", EventLogEntryType.Error, 20006);
-#endif
+                    LogEvent.Log(E, ResourcesValues.GetString("E20006"), EventLogEntryType.Error, 20006);
                     return false;
                 }
             }
@@ -1089,12 +1038,7 @@ namespace SharePoint.IdentityService
                 }
                 catch (Exception E)
                 {
-                    if (_wrapper != null)
-#if localization
-                        _wrapper.Log(E, ResourcesValues.GetString("E20007"), EventLogEntryType.Error, 20007);
-#else
-                        _wrapper.Log(E, "Error in LaunchStartCommand ", EventLogEntryType.Error, 20007);
-#endif
+                    LogEvent.Log(E, ResourcesValues.GetString("E20007"), EventLogEntryType.Error, 20007);
                     return;
                 }
             }
@@ -1394,12 +1338,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, ResourcesValues.GetString("E20009"), EventLogEntryType.Error, 20009);
-#else
-                    _wrapper.Log(E, "Error in FillGeneralParameters", EventLogEntryType.Error, 20009);
-#endif
+                LogEvent.Log(E, ResourcesValues.GetString("E20009"), EventLogEntryType.Error, 20009);
                 return null;
             }
         }
@@ -1512,12 +1451,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception E)
             {
-                if (_wrapper != null)
-#if localization
-                    _wrapper.Log(E, ResourcesValues.GetString("E20010"), EventLogEntryType.Error, 20010);
-#else
-                    _wrapper.Log(E, "Error in FillClaimsProviderParameters", EventLogEntryType.Error, 20010);
-#endif
+                LogEvent.Log(E, ResourcesValues.GetString("E20010"), EventLogEntryType.Error, 20010);
                 return null;
             }
         }

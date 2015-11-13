@@ -12,8 +12,7 @@
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               //
 //                                                                                                                                                                                          //
 //******************************************************************************************************************************************************************************************//
-#define enableddisabled
-#define localization
+#define enabledisabled
 
 using System;
 using System.Collections.Generic;
@@ -1376,11 +1375,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
         public void Reload()
         {
             DateTime db = DateTime.Now;
-#if localization
             LogEvent.Trace(string.Format(ResourcesValues.GetString("E1900"), this.ProviderName), EventLogEntryType.Information, 1900);
-#else
-            LogEvent.Trace(string.Format("Reload of Domains list Started for : {0}", this.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1900);
-#endif
 
             lock (this)
             {
@@ -1388,11 +1383,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 LoadDomains();
             }
             TimeSpan _e = DateTime.Now.Subtract(db);
-#if localization
             LogEvent.Trace(string.Format(ResourcesValues.GetString("E1900B"), this.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), EventLogEntryType.Information, 1900);
-#else
-            LogEvent.Trace(string.Format("Reload of Domains list Finished for : \" {0} \" : {1}:{2},{3} s", this.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), System.Diagnostics.EventLogEntryType.Information, 1900);
-#endif
         }
 
         /// <summary>
@@ -1453,27 +1444,15 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     _isloadedfromcache = true;
                     _isloaded = true;
                 }
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E1901"), res.ProviderName), EventLogEntryType.Information, 1901);
-#else
-                LogEvent.Trace(string.Format("Reload of Domains list form Cache Started for : {0}", res.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1901);
-#endif
                 TimeSpan _e = DateTime.Now.Subtract(db);
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E1901B"), res.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), EventLogEntryType.Information, 1901);
-#else
-                LogEvent.Trace(string.Format("Reload of Domains form Cache Finished for : \" {0} \" : {1}:{2},{3} s", res.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), System.Diagnostics.EventLogEntryType.Information, 1901);
-#endif
             }
             catch (Exception E)
             {
                 _isloaded = false;
                 _isloadedfromcache = false;
-#if localization
                 LogEvent.Log(E, ResourcesValues.GetString("E1902"), EventLogEntryType.Information, 1902);
-#else
-                LogEvent.Log(E, "Error loading Domains from Cache !", System.Diagnostics.EventLogEntryType.Error, 1902);
-#endif
                 res = null;
             }
             return res;
@@ -1753,21 +1732,23 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 Forest f = Forest.GetForest(dctx);
                 try
                 {
-#if localization
                     LogEvent.Trace(string.Format(ResourcesValues.GetString("E1000"), this.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1000);
-#else
-                    LogEvent.Trace(string.Format("Domains list starting to load for : {0}", this.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1000);
-#endif
-                    ActiveDirectoryDomainParam prm = GetDomainConfiguration(f.RootDomain.Name);
-                    if (prm.Enabled)
+                    foreach (Domain d in f.Domains)
                     {
-                        ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(f.RootDomain, internalGetTopLevelNames(), prm, this.GlobalParams);
-                        this.RootDomains.Add(r);
-                        r.IsRoot = true;
-                        LoadChildDomainList(r, f.RootDomain);
+                        if (d.Parent == null)
+                        {
+                            ActiveDirectoryDomainParam prm = GetDomainConfiguration(d.Name);
+                            if (prm.Enabled)
+                            {
+                                ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, internalGetTopLevelNames(), prm, this.GlobalParams);
+                                this.RootDomains.Add(r);
+                                r.IsRoot = true;
+                                LoadChildDomainList(r, d);
+                            }
+                            else
+                                this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This root domain {0} is administratively Disabled ", d), DateTime.Now.Subtract(db)));
+                        }
                     }
-                    else
-                        this.BadDomains.Add(new ActiveDirectoryBadDomain(f.RootDomain.Name, string.Format("This domain {0} is administratively Disabled ", f.RootDomain.Name), DateTime.Now.Subtract(db)));
                     try
                     {
                         TrustRelationshipInformationCollection t = f.GetAllTrustRelationships();
@@ -1794,40 +1775,24 @@ namespace SharePoint.IdentityService.ActiveDirectory
                             }
                             catch (Exception E)
                             {
-#if localization
                                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1001"), i.TargetName), System.Diagnostics.EventLogEntryType.Error, 1001);
-#else
-                                LogEvent.Log(E, string.Format("Error loading forest {0}", i.TargetName), System.Diagnostics.EventLogEntryType.Error, 1001);
-#endif
                             }
                         }
                     }
                     catch (Exception E)
                     {
-#if localization
                         LogEvent.Log(E, ResourcesValues.GetString("E1501"), System.Diagnostics.EventLogEntryType.Error, 1501);
-#else
-                        LogEvent.Log(E, "Error loading trust relationships  !", System.Diagnostics.EventLogEntryType.Error, 1501);
-#endif
                     }
                     if (rootit)
                         manual.WaitOne();
                     _isloaded = true;
                     TimeSpan _e = DateTime.Now.Subtract(db);
-#if localization
                     LogEvent.Trace(string.Format(ResourcesValues.GetString("E1000B"), this.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), System.Diagnostics.EventLogEntryType.Information, 1000);
-#else
-                    LogEvent.Trace(string.Format("Domains list successfully loaded for \" {0} \" : {1}:{2},{3} s", this.ProviderName, _e.Minutes, _e.Seconds, _e.Milliseconds), System.Diagnostics.EventLogEntryType.Information, 1000);
-#endif
                 }
                 catch (Exception E)
                 {
                     _isloaded = false;
-#if localization
                     LogEvent.Log(E, ResourcesValues.GetString("E1500"), System.Diagnostics.EventLogEntryType.Error, 1500);
-#else
-                    LogEvent.Log(E, "Error loading root forest !", System.Diagnostics.EventLogEntryType.Error, 1500);
-#endif
                 }
                 finally
                 {
@@ -1862,33 +1827,36 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     this.BadDomains.Add(new ActiveDirectoryBadDomain(data.ForestName, E.Message, DateTime.Now.Subtract(db)));
                     throw E;
                 }
-                ActiveDirectoryDomainParam prm = GetDomainConfiguration(ff.RootDomain.Name);
-                if (prm.Enabled)
+                foreach (Domain d in ff.Domains)
                 {
-                    ActiveDirectoryRootDomain r2 = null;
-                    try
+                    if (d.Parent == null)
                     {
+                        ActiveDirectoryDomainParam prm = GetDomainConfiguration(d.Name);
+                        if (prm.Enabled)
+                        {
+                            ActiveDirectoryRootDomain r = null;
+                            try
+                            {
 
-                        r2 = new ActiveDirectoryRootDomain(ff.RootDomain, data.TopLevelNames, prm, this.GlobalParams);
-                        this.RootDomains.Add(r2);
-                        LoadChildDomainList(r2, ff.RootDomain);
-                    }
-                    catch (Exception E)
-                    {
-                        this.BadDomains.Add(new ActiveDirectoryBadDomain(ff.RootDomain.Name, E.Message, DateTime.Now.Subtract(db)));
-                        throw E;
+                                r = new ActiveDirectoryRootDomain(d, data.TopLevelNames, prm, this.GlobalParams);
+                                this.RootDomains.Add(r);
+                                r.IsRoot = true;
+                                LoadChildDomainList(r, d);
+                            }
+                            catch (Exception E)
+                            {
+                                this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, E.Message, DateTime.Now.Subtract(db)));
+                                throw E;
+                            }
+                        }
+                        else
+                            this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This domain {0} is administratively Disabled ", d.Name), DateTime.Now.Subtract(db)));
                     }
                 }
-                else
-                    this.BadDomains.Add(new ActiveDirectoryBadDomain(ff.RootDomain.Name, string.Format("This domain {0} is administratively Disabled ", ff.RootDomain.Name), DateTime.Now.Subtract(db)));
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1200"), data.ForestName), System.Diagnostics.EventLogEntryType.Error, 1200);
-#else
-                LogEvent.Log(E, string.Format("Error loading forest {0}", data.ForestName), System.Diagnostics.EventLogEntryType.Error,1200);
-#endif
             }
             finally
             {
@@ -1926,11 +1894,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     catch (Exception E)
                     {
                         this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("Error loading domain {0}", d.Name), DateTime.Now.Subtract(DateTime.Now)));
-#if localization
                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1100"), d.Name), System.Diagnostics.EventLogEntryType.Error, 1100);
-#else
-                        LogEvent.Log(E, string.Format("Error loading child domain {0}", d.Name), System.Diagnostics.EventLogEntryType.Error,1100);
-#endif
                         throw E;
                     }
                 }
@@ -2048,11 +2012,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                     }
                                     catch (Exception E)
                                     {
-#if localization
                                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1020"), t.TopLevelName), System.Diagnostics.EventLogEntryType.Error, 1020);
-#else
-                                        LogEvent.Log(E, string.Format("Error searching in Top Level Names {0}", t.TopLevelName), System.Diagnostics.EventLogEntryType.Error,1020);
-#endif
                                     }
                                 }
                             }
@@ -2078,11 +2038,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                     }
                                     catch (Exception E)
                                     {
-#if localization
                                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2010"), xm.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#else
-                                        LogEvent.Log(E, string.Format("Error searching in Domain {0}", xm.DnsName), System.Diagnostics.EventLogEntryType.Error,2010);
-#endif
                                     }
                                 }
                                 else
@@ -2106,11 +2062,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                         }
                                         catch (Exception E)
                                         {
-#if localization
                                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2010B"), offdm.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#else
-                                            LogEvent.Log(E, string.Format("Error searching in Domain with free form {0}", offdm.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#endif
                                         }
                                     }
                                 }
@@ -2138,11 +2090,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                             }
                             catch (Exception E)
                             {
-#if localization
                                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2010B"), dm.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#else
-                                LogEvent.Log(E, string.Format("Error searching in Domain with free form {0}", dm.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#endif
                             }
                         }
                     }
@@ -2177,11 +2125,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
             }
             catch (Exception E)
             {
-#if localization
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2010C"), data.Domain.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#else
-                LogEvent.Log(E, string.Format("Error filling searching in Domain {0}", data.Domain.DnsName), System.Diagnostics.EventLogEntryType.Error, 2010);
-#endif
             }
             finally
             {
@@ -2267,11 +2211,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                 }
             if ((GlobalParams.Trace) && (hasresult == false))
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E8001"), pattern), System.Diagnostics.EventLogEntryType.Warning, 8001);
-#else
-                LogEvent.Trace(string.Format("Error resolving identity with search pattern {0}",  pattern), System.Diagnostics.EventLogEntryType.Warning, 8001);
-#endif
         }
         #endregion
 
@@ -2323,11 +2263,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                 }
             if ((GlobalParams.Trace) && (hasresult == false))
-#if localization
                 LogEvent.Trace(string.Format(ResourcesValues.GetString("E8001B"), pattern), System.Diagnostics.EventLogEntryType.Warning, 8001);
-#else
-                LogEvent.Trace(string.Format("Error Validating identity with search pattern {0}", pattern), System.Diagnostics.EventLogEntryType.Warning, 8001);
-#endif
         }
         #endregion
 
@@ -2464,8 +2400,8 @@ namespace SharePoint.IdentityService.ActiveDirectory
         private short _timeout = 30;
         private short _suspend = 1;
         private TimeSpan _elapsedtime;
-        private string _ctxpath;
-        private int _maxrows = 2;
+     //   private string _ctxpath;
+        private int _maxrows = 200;
         protected bool _ismaster = false;
         private bool _isroot = false;
         private bool _isreacheable = false;
@@ -2574,9 +2510,9 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     DateTime db = DateTime.Now;
                     DirectoryEntry dd = null;
                     if (string.IsNullOrEmpty(_connecstring))
-                        dd = new DirectoryEntry(@"LDAP://" + this.DnsName, _aduser, _adpwd, _secureparams);   
+                        dd = new DirectoryEntry(@"ldap://" + this.DnsName, _aduser, _adpwd, _secureparams);   
                     else
-                        dd = new DirectoryEntry(@"LDAP://" + this.ConnectString, _aduser, _adpwd, _secureparams);   
+                        dd = new DirectoryEntry(this.ConnectString, _aduser, _adpwd, _secureparams);   
                     object o = dd.NativeObject;
                     string[] s = dd.Name.Split('=');
                     _netbiosname = s[1].ToUpper();
@@ -2594,53 +2530,35 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     LogEvent.Log(E, string.Format("Error initializing Domain {0}", this.DnsName), System.Diagnostics.EventLogEntryType.Error, 1100);
                 }
 #else
+                DirectoryEntry RootDSE = null;
                 try
                 {
-                        string ldapqry = "LDAP://{0}/CN=Partitions,CN=Configuration,{1}";
-                        DateTime db = DateTime.Now;
-                        _ctxpath = "dc=" + this.DnsName.Replace(".", ",dc=");
-                        _netbiosname = GetNetBiosName(string.Format(ldapqry, this.DnsName, _ctxpath), _aduser, _adpwd, _secureparams);
-                        _isreacheable = (!string.IsNullOrEmpty(_netbiosname));
-                        TimeSpan elapsedtime = DateTime.Now.Subtract(db);
-                        if (elapsedtime.TotalSeconds > this._timeout)
-                            throw new Exception();
-                        if (!_isreacheable)
-                            throw new Exception("Invalid NetBIOS name !");
+
+                    RootDSE = new DirectoryEntry(@"LDAP://RootDSE", _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                    RootDSE.RefreshCache();
+                    string strNamingContext = RootDSE.Properties["defaultNamingContext"].Value.ToString();
+                    string strConfigContext = RootDSE.Properties["configurationNamingContext"].Value.ToString();
+                    string ldapqry = string.Format("LDAP://CN=Partitions,{0}", strConfigContext);
+                    DateTime db = DateTime.Now;
+
+                    _netbiosname = GetNetBiosName(string.Format(ldapqry, strConfigContext), this.DnsName, this.UserName, this.Password, _secureparams);
+                    _isreacheable = (!string.IsNullOrEmpty(_netbiosname));
+                    TimeSpan elapsedtime = DateTime.Now.Subtract(db);
+                    if (elapsedtime.TotalSeconds > this._timeout)
+                        throw new Exception();
+                    if (!_isreacheable)
+                        throw new Exception("Invalid NetBIOS name !");
                 }
-                catch (Exception)
+                catch (Exception Ex)
                 {
-                    DirectoryEntry dd = null;
-                    try
-                    {
-                        DateTime db = DateTime.Now;
-                        if (string.IsNullOrEmpty(_connecstring))
-                            dd = new DirectoryEntry(@"LDAP://" + this.DnsName, _aduser, _adpwd, _secureparams);
-                        else
-                            dd = new DirectoryEntry(@"LDAP://" + this.ConnectString, _aduser, _adpwd, _secureparams);
-                        object o = dd.NativeObject;
-                        string[] s = dd.Name.Split('=');
-                        _netbiosname = s[1].ToUpper();
-                        _isreacheable = (!string.IsNullOrEmpty(_netbiosname));
-                        _ctxpath = "dc=" + this.DnsName.Replace(".", ",dc=");
-                        TimeSpan elapsedtime = DateTime.Now.Subtract(db);
-                        if (elapsedtime.TotalSeconds > this._timeout)
-                            throw new Exception();
-                    }
-                    catch (Exception E2)
-                    {
-                        _isreacheable = false;
-                        result = false;
-#if localization
-                        LogEvent.Log(E2, string.Format(ResourcesValues.GetString("E1100B"), this.DnsName), System.Diagnostics.EventLogEntryType.Error, 1100);
-#else
-                        LogEvent.Log(E2, string.Format("Error initializing Domain {0}", this.DnsName), System.Diagnostics.EventLogEntryType.Error, 1100);
-#endif
-                    }
-                    finally
-                    {
-                        if (dd != null)
-                            dd.Dispose();
-                    }
+                    _isreacheable = false;
+                    result = false;
+                    LogEvent.Log(Ex, string.Format(ResourcesValues.GetString("E1100B"), this.DnsName), System.Diagnostics.EventLogEntryType.Error, 1100);
+                }
+                finally
+                {
+                    if (RootDSE != null)
+                        RootDSE.Dispose();
                 }
 #endif
             }
@@ -2650,7 +2568,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
         /// <summary>
         /// GetNetBiosName method implementation
         /// </summary>
-        private string GetNetBiosName(string ldapUrl, string userName, string password, AuthenticationTypes secure)
+        private string GetNetBiosName(string ldapUrl, string dnsname, string userName, string password, AuthenticationTypes secure)
         {
             string netbiosName = string.Empty;
             using (DirectoryEntry dirEntry = new DirectoryEntry(ldapUrl, userName, password, secure))
@@ -2661,20 +2579,29 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     searcher.PropertiesToLoad.Add("cn");
                     searcher.PropertiesToLoad.Add("nETBIOSName");
                     searcher.PropertiesToLoad.Add("name");
+                    searcher.PropertiesToLoad.Add("dnsRoot");
 
-                    SearchResult results = searcher.FindOne();
+                    SearchResultCollection results = searcher.FindAll();
                     if (results != null)
                     {
-                        ResultPropertyValueCollection rpvc = results.Properties["nETBIOSName"];
-                        netbiosName = rpvc[0].ToString();
-                        if (string.IsNullOrEmpty(netbiosName))
+                        foreach (SearchResult sr in results)
                         {
-                            rpvc = results.Properties["name"];
-                            netbiosName = rpvc[0].ToString();
-                            if (string.IsNullOrEmpty(netbiosName))
+                            ResultPropertyValueCollection dns = sr.Properties["dnsRoot"];
+                            string dnsroot = dns[0].ToString();
+                            if (dnsroot.ToLowerInvariant().Equals(dnsname))
                             {
-                                rpvc = results.Properties["cn"];
+                                ResultPropertyValueCollection rpvc = sr.Properties["nETBIOSName"];
                                 netbiosName = rpvc[0].ToString();
+                                if (string.IsNullOrEmpty(netbiosName))
+                                {
+                                    rpvc = sr.Properties["name"];
+                                    netbiosName = rpvc[0].ToString();
+                                    if (string.IsNullOrEmpty(netbiosName))
+                                    {
+                                        rpvc = sr.Properties["cn"];
+                                        netbiosName = rpvc[0].ToString();
+                                    }
+                                }
                             }
                         }
                     }
@@ -2965,11 +2892,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                         }
                                         catch (Exception E)
                                         {
-#if localization
                                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                            LogEvent.Log(E, string.Format("Error retreiving group properties in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                         }
                                     }
                                 };
@@ -2977,11 +2900,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         }
                         catch (Exception E)
                         {
-#if localization
                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2501"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2501);
-#else
-                            LogEvent.Log(E, string.Format("Error retreiving groups in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2501);
-#endif
                         }
                         _elapsedtime = DateTime.Now.Subtract(db);
                         if (recursive)
@@ -3010,7 +2929,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
 #if enabledonly
                         qryldap += ")(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
 #endif
-#if enableddisabled
+#if enabledisabled
                         qryldap += ")(userAccountControl:1.2.840.113556.1.4.803:=512)";
 #endif
 #if smartenabled
@@ -3028,15 +2947,11 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 {
                                     try
                                     {
-                                        lst.AddResultIfNotExists(new ActiveDirectoryUser(this, sr, this.GlobalParams.PeoplePickerImages));
+                                        lst.AddResultIfNotExists(new ActiveDirectoryUser(this, sr));
                                     }
                                     catch (Exception E)
                                     {
-#if localization
                                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2002"), sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2002);
-#else
-                                        LogEvent.Log(E, string.Format("Error retreiving user ({0}) Properties in Domain {1} with search pattern {2}", sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2002);
-#endif
                                     }
                                 }
                             };
@@ -3044,11 +2959,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                     catch (Exception E)
                     {
-#if localization
                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2000"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2000);
-#else
-                        LogEvent.Log(E, string.Format("Error retreiving users in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2000);
-#endif
                     }
                     _elapsedtime = DateTime.Now.Subtract(db);
                     if (recursive)
@@ -3066,11 +2977,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 catch (Exception E)
                 {
                     _suspendtime = DateTime.Now;
-#if localization
                     LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2001"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2001);
-#else
-                    LogEvent.Log(E, string.Format("Error filling searching in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Error, 2001);
-#endif
                     return;
                 }
                 finally
@@ -3160,11 +3067,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                         }
                                         catch (Exception E)
                                         {
-#if localization
                                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                            LogEvent.Log(E, string.Format("Error resolving group properties in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                         }
                                     }
                                     if (babes.Count == 0)
@@ -3177,11 +3080,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                             }
                                             catch (Exception E)
                                             {
-#if localization
                                                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                                LogEvent.Log(E, string.Format("Error retreiving group properties in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                             }
                                         }
                                     }
@@ -3197,11 +3096,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         }
                         catch (Exception E)
                         {
-#if localization
                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2500"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#else
-                            LogEvent.Log(E, string.Format("Error resolving groups in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#endif
                         }
                         _elapsedtime = DateTime.Now.Subtract(db);
 
@@ -3232,7 +3127,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
 #if enabledonly
                         qryldap += ")(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
 #endif
-#if enableddisabled
+#if enabledisabled
                         qryldap += ")(userAccountControl:1.2.840.113556.1.4.803:=512)";
 #endif
 #if smartenabled
@@ -3250,7 +3145,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 {
                                     try
                                     {
-                                        ActiveDirectoryUser babe = new ActiveDirectoryUser(this, sr, this.GlobalParams.PeoplePickerImages);
+                                        ActiveDirectoryUser babe = new ActiveDirectoryUser(this, sr);
                                         if (CheckUserBabe(babe, inspect))
                                         {
                                             babes.Add(babe);
@@ -3258,11 +3153,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                     }
                                     catch (Exception E)
                                     {
-#if localization
                                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502C"), sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                        LogEvent.Log(E, string.Format("Error retreiving user ({0}) Properties in Domain {1} with search pattern {2}", sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                     }
                                 }
                                 if (babes.Count == 0)
@@ -3271,15 +3162,11 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                     {
                                         try
                                         {
-                                            lst.AddResultIfNotExists(new ActiveDirectoryUser(this, sr, this.GlobalParams.PeoplePickerImages));
+                                            lst.AddResultIfNotExists(new ActiveDirectoryUser(this, sr));
                                         }
                                         catch (Exception E)
                                         {
-#if localization
                                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502C"), sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                            LogEvent.Log(E, string.Format("Error retreiving user ({0}) Properties in Domain {1} with search pattern {2}", sr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                         }
                                     }
                                 }
@@ -3295,11 +3182,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                     catch (Exception E)
                     {
-#if localization
                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2500B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#else
-                        LogEvent.Log(E, string.Format("Error resolving identities in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#endif
                     }
                     _elapsedtime = DateTime.Now.Subtract(db);
                     if (recursive)
@@ -3317,11 +3200,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 catch (Exception E)
                 {
                     _suspendtime = DateTime.Now;
-#if localization
                     LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2501B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2501);
-#else
-                    LogEvent.Log(E, string.Format("Error resolving identities in Domain {0} with resolve pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Error, 2501);
-#endif
                     return;
                 }
                 finally
@@ -3449,11 +3328,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                         }
                                         catch (Exception E)
                                         {
-#if localization
                                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                            LogEvent.Log(E, string.Format("Error resolving group properties in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                         }
                                     }
                                 }
@@ -3461,11 +3336,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         }
                         catch (Exception E)
                         {
-#if localization
                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2500"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#else
-                            LogEvent.Log(E, string.Format("Error resolving groups in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#endif
                         }
                         _elapsedtime = DateTime.Now.Subtract(db);
                     }
@@ -3493,7 +3364,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
 #if enabledonly
                             qryldap += ")(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
 #endif
-#if enableddisabled
+#if enabledisabled
                             qryldap += ")(userAccountControl:1.2.840.113556.1.4.803:=512)";
 #endif
 #if smartenabled
@@ -3509,26 +3380,18 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 {
                                     try
                                     {
-                                        lst.AddResultIfNotExists(new ActiveDirectoryUser(this, resultsusr, this.GlobalParams.PeoplePickerImages));
+                                        lst.AddResultIfNotExists(new ActiveDirectoryUser(this, resultsusr));
                                     }
                                     catch (Exception E)
                                     {
-#if localization
                                         LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2502C"), resultsusr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#else
-                                        LogEvent.Log(E, string.Format("Error retreiving user ({0}) Properties in Domain {1} with search pattern {2}", resultsusr.Path, this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2502);
-#endif
                                     }
                                 }
                             };
                         }
                         catch (Exception E)
                         {
-#if localization
                             LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2500B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#else
-                            LogEvent.Log(E, string.Format("Error resolving identities in Domain {0} with search pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2500);
-#endif
                         }
                         _elapsedtime = DateTime.Now.Subtract(db);
                     }
@@ -3547,11 +3410,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 catch (Exception E)
                 {
                     _suspendtime = DateTime.Now;
-#if localization
                     LogEvent.Log(E, string.Format(ResourcesValues.GetString("E2501B"), this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Warning, 2501);
-#else
-                    LogEvent.Log(E, string.Format("Error resolving identities in Domain {0} with resolve pattern {1}", this.DnsName, searchPattern), System.Diagnostics.EventLogEntryType.Error, 2501);
-#endif
                     return;
                 }
                 finally
@@ -3927,7 +3786,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
         /// <summary>
         /// ActiveDirectoryUser constructor overload
         /// </summary>
-        public ActiveDirectoryUser(ActiveDirectoryDomain dom, SearchResult sr, bool peoplepickerpictureurl): base()
+        public ActiveDirectoryUser(ActiveDirectoryDomain dom, SearchResult sr): base()
         {
             try
             {
@@ -3937,31 +3796,27 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     DomainDisplayName = dom.DisplayName;
                     UserPrincipalName = DirEntry.Properties["userPrincipalName"].Value.ToString();
                     SamAaccount = dom.NetbiosName + "\\" + DirEntry.Properties["sAMAccountName"].Value.ToString();
-                    if (DirEntry.Properties["displayName"].Value != null)
+                    if ((DirEntry.Properties.Contains("displayName")) && (DirEntry.Properties["displayName"].Value != null))
                         DisplayName = DirEntry.Properties["displayName"].Value.ToString();
-                    if (DirEntry.Properties["mail"].Value != null)
+                    if ((DirEntry.Properties.Contains("mail")) && (DirEntry.Properties["mail"].Value != null))
                         EmailAddress = DirEntry.Properties["mail"].Value.ToString();
-                    if (DirEntry.Properties["mobile"].Value != null)
+                    if ((DirEntry.Properties.Contains("mobile")) && (DirEntry.Properties["mobile"].Value != null))
                         MobilePhone = DirEntry.Properties["mobile"].Value.ToString();
-                    if (DirEntry.Properties["telephoneNumber"].Value != null)
+                    if ((DirEntry.Properties.Contains("telephoneNumber")) && (DirEntry.Properties["telephoneNumber"].Value != null))
                         WorkPhone = DirEntry.Properties["telephoneNumber"].Value.ToString();
-                    if (DirEntry.Properties["msRTCSIP-PrimaryUserAddress"].Value != null)
+                    if ((DirEntry.Properties.Contains("msRTCSIP-PrimaryUserAddress")) && (DirEntry.Properties["msRTCSIP-PrimaryUserAddress"].Value != null))
                         SIPAddress = DirEntry.Properties["msRTCSIP-PrimaryUserAddress"].Value.ToString();
-                    if (DirEntry.Properties["title"].Value != null)
+                    if ((DirEntry.Properties.Contains("title")) && (DirEntry.Properties["title"].Value != null))
                         JobTitle = DirEntry.Properties["title"].Value.ToString();
-                    if (DirEntry.Properties["department"].Value != null)
+                    if ((DirEntry.Properties.Contains("department")) && (DirEntry.Properties["department"].Value != null))
                         Department = DirEntry.Properties["department"].Value.ToString();
-                    if (DirEntry.Properties["physicalDeliveryOfficeName"].Value != null)
+                    if ((DirEntry.Properties.Contains("physicalDeliveryOfficeName")) && (DirEntry.Properties["physicalDeliveryOfficeName"].Value != null))
                         Location = DirEntry.Properties["physicalDeliveryOfficeName"].Value.ToString();
                 };
             }
             catch (Exception E)
             {
-#if localization
                 throw new Exception(ResourcesValues.GetString("INVUSER"), E);
-#else
-                throw new Exception("Invalid User, userPrincipalName and sAMAccountName properties are required !", E);
-#endif
             }
         }
 
@@ -4100,11 +3955,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
             }
             catch (Exception E)
             {
-#if localization
                 throw new Exception(ResourcesValues.GetString("INVGRP"), E);
-#else
-                throw new Exception("Invalid Group, objectGuid, objectSid, groupType, sAMAccountName are required !", E);
-#endif
             }
         }
 

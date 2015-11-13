@@ -392,9 +392,9 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT DnsName, DisplayName, Enabled, Connection, DisplayPosition FROM dbo.DomainConfiguration WHERE DnsName=@DnsName";
+                string qry = "SELECT DnsName, DisplayName, Enabled, Connection, DisplayPosition FROM dbo.DomainConfiguration WHERE DisplayName=@DisplayName";
                 cnx.Open();
-                return cnx.Query<DomainConfiguration>(qry, new { DnsName = name }).First();
+                return cnx.Query<DomainConfiguration>(qry, new { DisplayName = name }).First();
             }
         }
 
@@ -410,19 +410,19 @@ namespace SharePoint.IdentityService
                 if ((newcfg != null) && (string.IsNullOrEmpty(newcfg.Connection)))
                     newcfg.Connection = "default";
 
-                string upd = "UPDATE dbo.DomainConfiguration SET DisplayName=@DisplayName, Enabled=@Enabled, Connection=@Connection, DisplayPosition=@DisplayPosition WHERE DnsName=@DnsName";
+                string upd = "UPDATE dbo.DomainConfiguration SET DnsName=@DnsName, DisplayName=@DisplayName, Enabled=@Enabled, Connection=@Connection, DisplayPosition=@DisplayPosition WHERE DisplayName=@oldDisplayName";
                 string ins = "INSERT INTO dbo.DomainConfiguration (DnsName, DisplayName, Enabled, Connection, DisplayPosition) VALUES (@DnsName, @DisplayName, @Enabled, @Connection, @DisplayPosition)";
                 cnx.Open();
                 if (cfg != null)  // Update
                 {
-                    if (cnx.Execute(upd, new { DisplayName = newcfg.DisplayName, Enabled = newcfg.Enabled, Connection = newcfg.Connection, DisplayPosition = newcfg.DisplayPosition, DnsName = cfg.DnsName }) >= 1)
+                    if (cnx.Execute(upd, new { DnsName = newcfg.DnsName, DisplayName = newcfg.DisplayName, Enabled = newcfg.Enabled, Connection = newcfg.Connection, DisplayPosition = newcfg.DisplayPosition, OldDisplayName = cfg.DisplayName }) >= 1)
                         return true;
                     else  // do insert not probable
                         return (cnx.Execute(ins, new { DnsName = cfg.DnsName, DisplayName = cfg.DisplayName, Enabled = cfg.Enabled, Connection = cfg.Connection, DisplayPosition = cfg.DisplayPosition }) == 1);
                 }
                 else // Insert
-                {
-                    if (cnx.Execute(upd, new { DisplayName = newcfg.DisplayName, Enabled = newcfg.Enabled, Connection = newcfg.Connection, DisplayPosition = newcfg.DisplayPosition, DnsName = newcfg.DnsName }) >= 1)
+                {   // do Update not probable
+                    if (cnx.Execute(upd, new { DnsName = newcfg.DnsName, DisplayName = newcfg.DisplayName, Enabled = newcfg.Enabled, Connection = newcfg.Connection, DisplayPosition = newcfg.DisplayPosition, OldDisplayName = newcfg.DisplayName }) >= 1)
                         return true;
                     else // do insert
                         return (cnx.Execute(ins, new { DnsName = newcfg.DnsName, DisplayName = newcfg.DisplayName, Enabled = newcfg.Enabled, Connection = newcfg.Connection, DisplayPosition = newcfg.DisplayPosition }) == 1);
@@ -437,9 +437,9 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string del = "DELETE FROM dbo.DomainConfiguration WHERE DnsName=@DnsName";
+                string del = "DELETE FROM dbo.DomainConfiguration WHERE DisplayName=@DisplayName";
                 cnx.Open();
-                if (cnx.Execute(del, new { DnsName = cfg.DnsName }) >= 1)
+                if (cnx.Execute(del, new { DisplayName = cfg.DisplayName }) >= 1)
                     return true;
                 else
                     return false;
@@ -453,7 +453,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT a.DnsName, a.DisplayName, a.Enabled, a.Connection, a.DisplayPosition, b.UserName, b.Password, b.Timeout, b.Secure, b.Maxrows, b.ConnectString FROM dbo.DomainConfiguration a inner join dbo.ConnectionConfiguration b on a.Connection = b.ConnectionName";
+                string qry = "SELECT a.DnsName, a.DisplayName, a.Enabled, a.Connection, a.DisplayPosition, b.UserName, b.Password, b.Timeout, b.Secure, b.Maxrows, b.ConnectString FROM dbo.DomainConfiguration a inner join dbo.ConnectionConfiguration b on a.Connection = b.ConnectionName where a.Enabled=1";
                 cnx.Open();
                 return cnx.Query<FullConfiguration>(qry, null);
             }
@@ -858,7 +858,7 @@ namespace SharePoint.IdentityService
             this.Timeout = timeout;
             this.Secure = secure;
             this.Maxrows = maxrows;
-            this.ConnectString = ConnectString;
+            this.ConnectString = connectstring;
         }
 
         public string ConnectionName { get; set; }

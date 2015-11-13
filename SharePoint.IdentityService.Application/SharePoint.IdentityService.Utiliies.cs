@@ -19,6 +19,7 @@ using Microsoft.SharePoint.Administration.AccessControl;
 using Microsoft.SharePoint.Administration.Claims;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Security.Principal;
@@ -29,6 +30,7 @@ namespace SharePoint.IdentityService
     
     static class Utilities
     {
+         const string _eventlogsource = "ActiveDirectory Identity Service";
          static string szassembly = "SharePoint.IdentityService.ClaimsProvider, Version=15.0.0.0, Culture=neutral, PublicKeyToken=";
          static string sztypename = "SharePoint.IdentityService.ClaimsProvider.IdentityServiceClaimsProvider";
 
@@ -679,13 +681,28 @@ namespace SharePoint.IdentityService
             {
                 if ((canupdate) && DoesClaimProviderExist("AD"))
                 {
-                    SPClaimProviderDefinition cp = UpdateClaimProvider("AD", desc, isusedbydefault);
+                    try
+                    {
+                        SPClaimProviderDefinition cp = UpdateClaimProvider("AD", desc, isusedbydefault);
+                    }
+                    catch (Exception Ex)
+                    {
+                        LogEvent.Log(Ex, "SharePoint Identity Service Error Application when updating SPClaimProvider : AD", EventLogEntryType.Error, 9998);
+                    }
                 }
                 else 
-                {  // ICI
-                    if (DoesClaimProviderExist("AD"))
-                        DeleteClaimProvider("AD");
-                    SPClaimProviderDefinition cp = AddClaimProvider("AD", desc, szassembly + GetPublicKeyTokenFromAssembly(), sztypename, isusedbydefault);
+                {  
+                    try
+                    {
+
+                        if (DoesClaimProviderExist("AD"))
+                            DeleteClaimProvider("AD");
+                        SPClaimProviderDefinition cp = AddClaimProvider("AD", desc, szassembly + GetPublicKeyTokenFromAssembly(), sztypename, isusedbydefault);
+                    }
+                    catch (Exception Ex)
+                    {
+                        LogEvent.Log(Ex, "SharePoint Identity Service Error Application when creating SPClaimProvider : AD", EventLogEntryType.Error, 9999);
+                    }
                 }
                 IdentityServiceApplication app = GetApplicationByName(applicationname);
                 if (app != null)
@@ -709,11 +726,27 @@ namespace SharePoint.IdentityService
             {
                 if ((canupdate) || DoesClaimProviderExist(cpname))
                 {
-                    SPClaimProviderDefinition cp = UpdateClaimProvider(cpname, desc, isusedbydefault);
+                    try
+                    {
+                        SPClaimProviderDefinition cp = UpdateClaimProvider(cpname, desc, isusedbydefault);
+                    }
+                    catch (Exception Ex)
+                    {
+                        LogEvent.Log(Ex, "SharePoint Identity Service Error Application when updating SPClaimProvider : " + cpname, EventLogEntryType.Error, 9998);
+                    }
                 }
                 else
                 {
-                    SPClaimProviderDefinition cp = AddClaimProvider(cpname, desc, szassembly + GetPublicKeyTokenFromAssembly(), sztypename, isusedbydefault);
+                    try
+                    {
+                        if (DoesClaimProviderExist(cpname))
+                           DeleteClaimProvider(cpname);
+                        SPClaimProviderDefinition cp = AddClaimProvider(cpname, desc, szassembly + GetPublicKeyTokenFromAssembly(), sztypename, isusedbydefault);
+                    }
+                    catch (Exception Ex)
+                    {
+                        LogEvent.Log(Ex, "SharePoint Identity Service Error Application when creating SPClaimProvider : " + cpname, EventLogEntryType.Error, 9999);
+                    }
                 }
                 IdentityServiceApplication app = GetApplicationByName(applicationname);
                 if (app != null)
@@ -955,6 +988,85 @@ namespace SharePoint.IdentityService
         }
         #endregion
     }
+
+    #region Logs & trace
+    /// <summary>
+    /// LogEvent Class
+    /// </summary>
+    public static class LogEvent
+    {
+        const string _eventlogsource = "ActiveDirectory Identity Service";
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        static LogEvent()
+        {
+            try
+            {
+                // using (Identity impersonate = Identity.ImpersonateAdmin()) 
+                SPSecurity.RunWithElevatedPrivileges(delegate()
+                {
+                    if (!EventLog.SourceExists(_eventlogsource))
+                        System.Diagnostics.EventLog.CreateEventSource(_eventlogsource, "Application");
+                }
+                );
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Log method implementation
+        /// </summary>
+        public static void Log(Exception ex, string message, EventLogEntryType eventLogEntryType, int eventid = 0)
+        {
+            try
+            {
+                // using (Identity impersonate = Identity.ImpersonateAdmin()) 
+                SPSecurity.RunWithElevatedPrivileges(delegate()
+                {
+                    EventLog evtL = new EventLog("Application");
+                    evtL.Source = _eventlogsource;
+
+                    string contents = String.Format("{0}\r\n{1}\r\n{2}", message, ex.Message, ex.StackTrace);
+                    while ((ex = ex.InnerException) != null)
+                    {
+                        contents = String.Format("{3}\r\n\r\n{0}\r\n{1}\r\n{2}", message, ex.Message, ex.StackTrace, contents);
+                    }
+                    evtL.WriteEntry(contents, eventLogEntryType, eventid);
+                }
+                );
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Trace method implementation
+        /// </summary>
+        public static void Trace(string message, EventLogEntryType eventLogEntryType, int eventid = 0)
+        {
+            try
+            {
+                //using (Identity impersonate = Identity.ImpersonateAdmin()) 
+                SPSecurity.RunWithElevatedPrivileges(delegate()
+                {
+                    EventLog evtL = new EventLog("Application");
+                    evtL.Source = _eventlogsource;
+                    string contents = String.Format("{0}", message);
+                    evtL.WriteEntry(contents, eventLogEntryType, eventid);
+                }
+                );
+            }
+            catch
+            {
+            }
+        }
+    }
+    #endregion
 
     #region ClaimProviderDefinition
     public class ClaimProviderDefinition
