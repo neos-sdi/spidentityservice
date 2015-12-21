@@ -1,5 +1,0 @@
-﻿<%@ServiceHost 
-  Language="C#"
-  Service="SharePoint.IdentityService.IdentityServiceApplication, SharePoint.IdentityService.Application, Version=15.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$"
-  Factory="SharePoint.IdentityService.IdentityServiceHostFactory, SharePoint.IdentityService.Application, Version=15.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$"
-%>
