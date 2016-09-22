@@ -31,6 +31,10 @@ INSERT INTO [dbo].[AssemblyConfiguration] ([AssemblyFulldescription], [AssemblyT
 VALUES ('SharePoint.IdentityService.Application, Version=15.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.ClaimsAugmenter', 1, 1, 1)
 GO
 
+INSERT INTO [dbo].[AssemblyConfiguration] ([AssemblyFulldescription], [AssemblyTypeDescription], [TraceResolve], [Selected], [ClaimsExt])
+VALUES ('SharePoint.IdentityService.AzureActiveDirectory, Version=15.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.AzureActiveDirectory.DirectoryWrapper', 0, 0, 0)
+GO
+
 CREATE TABLE [dbo].[ConnectionConfiguration]
 (
 [ConnectionName] [nchar](18) NOT NULL,

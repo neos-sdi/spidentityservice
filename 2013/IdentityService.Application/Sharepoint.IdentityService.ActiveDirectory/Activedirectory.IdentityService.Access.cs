@@ -2587,41 +2587,15 @@ namespace SharePoint.IdentityService.ActiveDirectory
             bool result = true;
             using (Identity impersonate = Identity.Impersonate(_aduser, _adpwd))
             {
-#if nativead
-                try
-                {
-                    DateTime db = DateTime.Now;
-                    DirectoryEntry dd = null;
-                    if (string.IsNullOrEmpty(_connecstring))
-                        dd = new DirectoryEntry(@"ldap://" + this.DnsName, _aduser, _adpwd, _secureparams);   
-                    else
-                        dd = new DirectoryEntry(this.ConnectString, _aduser, _adpwd, _secureparams);   
-                    object o = dd.NativeObject;
-                    string[] s = dd.Name.Split('=');
-                    _netbiosname = s[1].ToUpper();
-                    _isreacheable = (!string.IsNullOrEmpty(_netbiosname));
-                    _ctxpath = "dc=" + this.DnsName.Replace(".", ",dc=");
-                    //"dc=rsoft,dc=com"
-                    TimeSpan elapsedtime = DateTime.Now.Subtract(db);
-                    if (elapsedtime.TotalSeconds > this._timeout)
-                        throw new Exception();
-                }
-                catch (Exception E)
-                {
-                    _isreacheable = false;
-                    result = false;
-                    LogEvent.Log(E, string.Format("Error initializing Domain {0}", this.DnsName), System.Diagnostics.EventLogEntryType.Error, 1100);
-                }
-#else
                 DirectoryEntry RootDSE = null;
                 try
                 {
 
-                    RootDSE = new DirectoryEntry(@"LDAP://RootDSE", _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                    RootDSE = new DirectoryEntry(string.Format("LDAP://{0}/RootDSE",this.DnsName), _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
                     RootDSE.RefreshCache();
                     string strNamingContext = RootDSE.Properties["defaultNamingContext"].Value.ToString();
                     string strConfigContext = RootDSE.Properties["configurationNamingContext"].Value.ToString();
-                    string ldapqry = string.Format("LDAP://CN=Partitions,{0}", strConfigContext);
+                    string ldapqry = string.Format("LDAP://{0}/CN=Partitions,{1}", this.DnsName, strConfigContext);
                     DateTime db = DateTime.Now;
 
                     _netbiosname = GetNetBiosName(string.Format(ldapqry, strConfigContext), this.DnsName, this.UserName, this.Password, _secureparams);
@@ -2643,7 +2617,6 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     if (RootDSE != null)
                         RootDSE.Dispose();
                 }
-#endif
             }
             return result;
         }

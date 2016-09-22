@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharePoint.IdentityService.ActiveDirectory</RootNamespace>
     <AssemblyName>SharePoint.IdentityService.ActiveDirectory</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SharePoint.IdentityService.Core\SharePoint.IdentityService.Core.csproj">
-      <Project>{009174AC-0149-4AA1-A339-63F550DD2E71}</Project>
+      <Project>{009174ac-0149-4aa1-a339-63f550dd2e71}</Project>
       <Name>SharePoint.IdentityService.Core</Name>
     </ProjectReference>
   </ItemGroup>
