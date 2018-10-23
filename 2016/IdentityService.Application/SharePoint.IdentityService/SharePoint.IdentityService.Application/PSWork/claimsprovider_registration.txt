@@ -1,0 +1,161 @@
+REM ***************************************
+REM Utils
+REM ***************************************
+
+
+REM Dans la console PowerShell de SharePoint
+
+REM Lister les Claims Providers
+$CL = Get-SPClaimProvider
+Remove-SPClaimProvider $CL[5]  
+Remove-SPClaimProvider $CL[4]  
+
+REM Ajouter un Claim Provider (trusted)
+IdentityService
+
+# ADD
+New-SPClaimProvider -DisplayName "AD" -Description "Windows Claims Provider" -Type "SharePoint.IdentityService.ClaimsProvider.IdentityServiceClaimsProvider" -AssemblyName "SharePoint.IdentityService.ClaimsProvider, Version=16.0.0.0, Culture=neutral, PublicKeyToken=5f2cd3262c7b6db4" 
+New-SPClaimProvider -DisplayName "Software" -Description "Software Claims Provider" -Type "SharePoint.IdentityService.ClaimsProvider.IdentityServiceClaimsProvider" -AssemblyName "SharePoint.IdentityService.ClaimsProvider, Version=16.0.0.0, Culture=neutral, PublicKeyToken=5f2cd3262c7b6db4" 
+
+# RESTORE DEFAULTS
+New-SPClaimProvider -DisplayName "AD" -Description "Windows" -Type "Microsoft.SharePoint.Administration.Claims.SPActiveDirectoryClaimProvider" -AssemblyName "Microsoft.SharePoint, Version=16.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" 
+New-SPClaimProvider -DisplayName "redhook" -Description "redhook" -Type "Microsoft.SharePoint.Administration.Claims.SPTrustedClaimProvider" -AssemblyName "Microsoft.SharePoint, Version=16.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" 
+
+# Tu be sure after redeploy
+Stop-Service "SPTimerV4"
+IISRESET
+Start-Service "SPTimerV4"
+
+$trusted = Get-SPTrustedIdentityTokenIssuer -Identity "redhook"
+$trusted.ClaimProviderName = “redhook”  
+$trusted.Update()
+
+
+
+REM ***************************************
+REM Utils
+REM ***************************************
+
+// Affectation du ClaimProvider  Sur NTLM/Windows Claims
+
+$WCLAIMS = Get-SPAuthenticationProvider -WebApplication https://sharepoint.redhooksoftware.net -Zone Default
+
+$WCLAIMS = Get-SPAuthenticationProvider -WebApplication http://frmtcinterdv10:82 -Zone Default
+
+Get-SPAuthenticationProvider -WebApplication http://windows.redhooksoftware.fr -Zone Intranet
+
+Set-SPWebApplication -AuthenticationProvider $NTLM,$FBA -Identity $webApplication -Zone "Default
+
+Set-SPWebApplication -Identity "http://windows.redhooksoftware.fr" -Zone Intranet -AdditionalClaimProvider $CL[5]
+
+Set-SPWebApplication -Identity "http://intranet.redhooksoftware.fr" -Zone Intranet -AdditionalClaimProvider $CL[5]
+
+Ensuite
+
+
+$WCLAIMS.ClaimProviderName = "ColasClaimsProvider"   // standard => "AD"
+$WCLAIM
+
+Ensuite
+
+$CMANAGER = Get-SPClaimProviderManager
+$CMANAGER.Update()
+$CMANAGER.ClaimProviders[1]
+
+
+Disabling AD Nodes
+$CM = Get-SPClaimProviderManager
+$AD = Get-SPClaimProvider -Identity "AD"
+$AD.IsEnabled = $false
+$AD.IsVisible = $false
+$AD.IsUsedByDefault = $false
+$CM.Update()
+
+
+$CMANAGER = Get-SPClaimProviderManager
+$AD = Get-SPClaimProvider -Identity "AD"
+$AD.IsEnabled = $true
+$AD.IsVisible = $true
+$AD.IsUsedByDefault = $true
+$CMANAGER.Update()
+
+
+$CMANAGER = Get-SPClaimProviderManager
+$AD = Get-SPClaimProvider -Identity "AD"
+$AD.IsEnabled = $true
+$AD.IsVisible = $false
+$AD.IsUsedByDefault = $true
+$CMANAGER.Update()
+
+
+
+$CMANAGER = Get-SPClaimProviderManager
+
+$AD = Get-SPClaimProvider -Identity "AD"
+$AD.IsEnabled = $false
+
+$CMANAGER.Update()
+
+
+$trusted = Get-SPTrustedIdentityTokenIssuer -Identity "redhook"
+$trusted.ClaimProviderName = “redhook”  
+$trusted.ClaimProviderName = “Windows”  
+$trusted.Update()
+
+
+$WCLAIMS = Get-SPAuthenticationProvider
+-WebApplication : Saisir
+-Zone : Saisir
+
+
+$claimProvider = Get-SPClaimProvider "redhook"
+Set-SPWebApplication -Identity "http://windows.redhooksoftware.fr" -Zone Intranet -AdditionalClaimProvider $claimProvider
+
+Ensuite
+
+$WCLAIMS[1].ClaimProviderName = "RedhookClaimProvider"   // standard => "AD"
+ou
+$WCLAIMS.ClaimProviderName = "AD"   
+$WCLAIMS.ClaimProviderName = "IdentityServiceWindows"
+$WCLAIM
+
+
+$CM = Get-SPClaimProviderManager
+$WC = Get-SPAuthenticationProvider -WebApplication http://sharepoint.redhooksoftware.net -Zone Default
+$WC.ClaimProviderName = "Windows"   
+$CM.Update()
+
+$CM = Get-SPClaimProviderManager
+$WC = Get-SPAuthenticationProvider -WebApplication http://sharepoint.redhooksoftware.net -Zone Intranet
+$WC[1].ClaimProviderName = "redhook"   
+$CM.Update()
+
+
+
+$CM = Get-SPClaimProviderManager
+Get-SPAuthenticationProvider -WebApplication http://windows.redhooksoftware.fr -Zone Intranet
+
+
+stsadm -o getproperty -propertyname peoplepicker nowindowsaccountsfornonwindowsauthenticationmode [-url] <URL>
+
+
+
+
+$claimProvider = Get-SPClaimProvider "RedhookClaimProvider"
+
+
+Set-SPWebApplication -Identity https://sharepoint.redhooksoftware.net -Zone Default -AdditionalClaimProvider $claimProvider[4]
+
+
+
+
+Get-SPClaimProvider | ForEach-Object {  
+     Write-Host $_.TypeName 
+     IF ( $_.TypeName -eq "Redhook.SharePoint.Claims.ADprovider") 
+         { 
+            Write-Host "Found" 
+             $cp = $_ 
+         } 
+    } 
+$cp.DisplayName 
+Remove-SPClaimProvider $cp 
