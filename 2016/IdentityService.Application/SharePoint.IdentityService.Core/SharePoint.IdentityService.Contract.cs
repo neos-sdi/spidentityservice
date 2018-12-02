@@ -19,6 +19,7 @@ namespace SharePoint.IdentityService.Core
     using System.Runtime.Serialization;
     using System.Collections.Generic;
     using Microsoft.SharePoint.Administration.Claims;
+    using System.Collections;
 
     [ServiceContract(Namespace="http://sharepoint.identityservice.application")]
     public interface IIdentityServiceContract
@@ -134,7 +135,7 @@ namespace SharePoint.IdentityService.Core
         { 
             get { return _results; }
             set { _results = value; }
-            }
+        }
 
         [DataMember]
         public bool HasResults { get; set; }
@@ -144,6 +145,16 @@ namespace SharePoint.IdentityService.Core
 
         [DataMember]
         public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Merge method
+        /// </summary>
+        /// <param name="src"></param>
+        public void Merge(ProxyResults src)
+        {
+            Nodes.AddRange(src.Nodes);
+            Results.AddRange(src.Results);
+        }
     }
 
     [DataContract]
@@ -256,6 +267,11 @@ namespace SharePoint.IdentityService.Core
             get { return _children; }
             set { _children = value; }
         }
+
+        public void Merge(ProxyDomain src)
+        {
+            this.Domains.AddRange(src.Domains);
+        }
     }
 
     [DataContract]
@@ -284,6 +300,7 @@ namespace SharePoint.IdentityService.Core
         public int Maxrows { get; set; }
         public string ConnectString { get; set; }
         public bool IsDefault { get; set; }
+        public Int64 ConnectorID { get; set; }
     }
 
     [DataContract]

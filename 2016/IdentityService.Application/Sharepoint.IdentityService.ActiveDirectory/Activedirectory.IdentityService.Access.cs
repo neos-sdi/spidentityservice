@@ -580,6 +580,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
     public class ActiveDirectoryWrapper : IWrapper, IWrapperCaching
     {
         private IForests _wrp = null;
+        private long _connectorid = 1;
 
         /// <summary>
         /// ActiveDirectoryWrapper constructor
@@ -672,8 +673,9 @@ namespace SharePoint.IdentityService.ActiveDirectory
             {
                 _wrp.EnsureLoaded();
             }
-            catch
+            catch (Exception E)
             {
+                Log(E, ResourcesValues.GetString("E20007"), EventLogEntryType.Error, 20007);
             }
         }
 
@@ -684,6 +686,15 @@ namespace SharePoint.IdentityService.ActiveDirectory
         {
             get { return _wrp.ProviderName; }
             set { _wrp.ProviderName = value; }
+        }
+
+        /// <summary>
+        /// ConnectorID property implementation
+        /// </summary>
+        public Int64 ConnectorID
+        {
+            get { return this._connectorid; }
+            set { this._connectorid = value; }
         }
 
         /// <summary>
@@ -843,8 +854,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
             EnsureLoaded();
             ProxyResults results = null;
             IResults lst = new ActiveDirectoryResultsRoot();
-           // _wrp.FillSearch(lst, pattern, null, recursive);
-            _wrp.FillResolve(lst, pattern, true);
+            _wrp.FillResolve(lst, pattern, recursive);
             if (lst.HasResults())
             {
                 results = new ProxyResults();
@@ -1099,11 +1109,11 @@ namespace SharePoint.IdentityService.ActiveDirectory
         public ProxyDomain FillHierarchy(string hierarchyNodeID, int numberOfLevels)
         {
             ProxyDomain results = new ProxyDomain();
-                results.ElapsedTime = _wrp.ElapsedTime;
-                results.IsReacheable = true;
-                results.IsRoot = true;
-                results.DnsName = "Root";
-                results.DisplayName = "Root";
+            results.ElapsedTime = _wrp.ElapsedTime;
+            results.IsReacheable = true;
+            results.IsRoot = true;
+            results.DnsName = "Root";
+            results.DisplayName = "Root";
             if (string.IsNullOrEmpty(hierarchyNodeID))
             {
                 foreach (IDomain d in _wrp.RootDomains)
@@ -1783,21 +1793,29 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     LogEvent.Trace(string.Format(ResourcesValues.GetString("E1000"), this.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1000);
                     foreach (Domain d in f.Domains)
                     {
-                        if (d.Parent == null)
+                        try
                         {
-                            List<ActiveDirectoryDomainParam> lprm = GetDomainConfigurations(d.Name);
-                            foreach (ActiveDirectoryDomainParam prm in lprm)
+                            if (d.Parent == null)
                             {
-                                if (prm.Enabled)
+                                List<ActiveDirectoryDomainParam> lprm = GetDomainConfigurations(d.Name);
+                                foreach (ActiveDirectoryDomainParam prm in lprm)
                                 {
-                                    ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, internalGetTopLevelNames(), prm, this.GlobalParams);
-                                    this.RootDomains.Add(r);
-                                    r.IsRoot = true;
-                                    LoadChildDomainList(r, d);
+                                    if (prm.Enabled)
+                                    {
+                                        ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, internalGetTopLevelNames(), prm, this.GlobalParams);
+                                        this.RootDomains.Add(r);
+                                        r.IsRoot = true;
+                                        LoadChildDomainList(r, d);
+                                    }
+                                    else
+                                        this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This root domain {0} is administratively Disabled ", d), DateTime.Now.Subtract(db)));
                                 }
-                                else
-                                    this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This root domain {0} is administratively Disabled ", d), DateTime.Now.Subtract(db)));
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            LogEvent.Log(e, ResourcesValues.GetString("E1501"), System.Diagnostics.EventLogEntryType.Error, 1501);
+                            this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This domain {0} caused an error ", d), DateTime.Now.Subtract(db)));
                         }
                     }
                     try
@@ -2022,7 +2040,13 @@ namespace SharePoint.IdentityService.ActiveDirectory
             EnsureLoaded();
             DateTime db = DateTime.Now;
             ActiveDirectoryInspectValues inspect = ActiveDirectoryRegEx.Parse(pattern);
-            List<IDomain> dom = GetScopedDomain(domain, inspect);
+            List<IDomain> dom = null;
+            if (!string.IsNullOrEmpty(domain))
+            {
+                dom = GetScopedDomain(domain, inspect);
+                if (dom == null)
+                    return;
+            }
             if (dom!=null)
             {
                 foreach(IDomain xd in dom)
@@ -2527,7 +2551,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 _connecstring = parameters.ConnectString;
                 if (parameters.SecureConnection)
                 {
-                    _secureparams = AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure | AuthenticationTypes.FastBind | AuthenticationTypes.ReadonlyServer;
+                    _secureparams = AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.SecureSocketsLayer | AuthenticationTypes.FastBind | AuthenticationTypes.ReadonlyServer;
                 }
                 else
                 {
@@ -2561,7 +2585,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 _connecstring = parameters.ConnectString;
                 if (parameters.SecureConnection)
                 {
-                    _secureparams = AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure | AuthenticationTypes.FastBind | AuthenticationTypes.ReadonlyServer;
+                    _secureparams = AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.SecureSocketsLayer | AuthenticationTypes.FastBind | AuthenticationTypes.ReadonlyServer;
                 }
                 else
                 {
@@ -2590,11 +2614,11 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 DirectoryEntry RootDSE = null;
                 try
                 {
-                    RootDSE = new DirectoryEntry(string.Format("LDAP://{0}/RootDSE", this.DnsName), _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                    RootDSE = new DirectoryEntry(@"LDAP://"+domain+"/RootDSE", _aduser, _adpwd, _secureparams);
                     RootDSE.RefreshCache();
                     string strNamingContext = RootDSE.Properties["defaultNamingContext"].Value.ToString();
                     string strConfigContext = RootDSE.Properties["configurationNamingContext"].Value.ToString();
-                    string ldapqry = string.Format("LDAP://{0}/CN=Partitions,{1}", this.DnsName, strConfigContext);
+                    string ldapqry = string.Format("LDAP://CN=Partitions,{0}", strConfigContext);
                     DateTime db = DateTime.Now;
 
                     _netbiosname = GetNetBiosName(string.Format(ldapqry, strConfigContext), this.DnsName, this.UserName, this.Password, _secureparams);
@@ -2872,7 +2896,14 @@ namespace SharePoint.IdentityService.ActiveDirectory
             if (string.IsNullOrEmpty(this.ConnectString))
                 return Domain.GetDomain(new DirectoryContext(DirectoryContextType.Domain, this.DnsName, this.UserName, this.Password)).GetDirectoryEntry();
             else
-                return new DirectoryEntry(this.ConnectString, this.UserName, this.Password);
+            {
+                string ldapPath = string.Empty;
+                if (_secureparams.HasFlag(AuthenticationTypes.SecureSocketsLayer))
+                    ldapPath = string.Format("LDAPS://{0}:636/{1}", this.DnsName, this.ConnectString);
+                else
+                    ldapPath = string.Format("LDAP://{0}:389/{1}", this.DnsName, this.ConnectString);
+                return new DirectoryEntry(ldapPath, this.UserName, this.Password);
+            }
         }
 
         /// <summary>

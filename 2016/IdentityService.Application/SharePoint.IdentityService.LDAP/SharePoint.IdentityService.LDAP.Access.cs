@@ -23,6 +23,8 @@ namespace SharePoint.IdentityService.LDAP
         private bool _traceresolve;
         private bool _peoplepickerimages;
         private bool _showsystemnodes;
+        private bool _supportsuserkey;
+
 
         /// <summary>
         /// SmoothRequestor property implementation
@@ -103,6 +105,15 @@ namespace SharePoint.IdentityService.LDAP
         {
             get { return _showsystemnodes; }
             set { _showsystemnodes = value; }
+        }
+
+        /// <summary>
+        /// ClaimProviderSupportsUserKey property implementation
+        /// </summary>
+        public bool ClaimProviderSupportsUserKey
+        {
+            get { return _supportsuserkey; }
+            set { _supportsuserkey = value; }
         }
 
     }

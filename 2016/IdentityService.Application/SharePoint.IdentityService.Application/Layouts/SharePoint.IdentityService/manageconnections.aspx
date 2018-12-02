@@ -37,6 +37,20 @@ SharePoint Identity Services
                     <Template_Control>
                         <SharePoint:SPGridView ID="Grid" AllowPaging="True" PageSize="7" AutoGenerateColumns="false" runat="server" DataSourceID="ServiceDataSource" ShowFooter="true" OnRowCommand="Grid_RowCommand" OnRowDataBound="Grid_RowDataBound" OnPageIndexChanging="Grid_PageIndexChanging" FooterStyle-VerticalAlign="Top" DataKeyNames="ConnectionName">
                             <Columns>
+                                <asp:TemplateField HeaderText="Connector ID" ControlStyle-Width="50px">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="txtConnectorID" runat="server" Text='<%# Bind("ConnectorID") %>' ValidationGroup="B"></asp:TextBox>
+                                        <asp:RequiredFieldValidator ID="ReqConnectorID" runat="server" ErrorMessage='<%# GetUIString("CNXVALIDATORNAMEMESSAGE") %>' ControlToValidate="txtConnectorID" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" ValidationGroup="B" ></asp:RequiredFieldValidator>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:TextBox ID="lblConnectorID" runat="server" Text='<%# Bind("ConnectorID") %>' BorderStyle="None" Enabled="false" ValidationGroup="B"></asp:TextBox>
+                                    </ItemTemplate>
+                                    <FooterTemplate>
+                                        <br />
+                                        <asp:TextBox ID="newConnectorID" runat="server" Width="50px" ValidationGroup="A"></asp:TextBox>
+                                        <asp:RequiredFieldValidator ID="valConnectorID" runat="server" ErrorMessage='<%# GetUIString("CNXVALIDATORNAMEMESSAGE") %>' ControlToValidate="newConnectorID" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" ValidationGroup="A" ></asp:RequiredFieldValidator>
+                                    </FooterTemplate>
+                                </asp:TemplateField>
                                 <asp:TemplateField HeaderText="Connection Name" ControlStyle-Width="150px">
                                     <EditItemTemplate>
                                         <asp:TextBox ID="txtConnectionName" runat="server" Text='<%# Bind("ConnectionName") %>' ValidationGroup="B"></asp:TextBox>
@@ -67,11 +81,11 @@ SharePoint Identity Services
                                 </asp:TemplateField>
                                 <asp:TemplateField HeaderText="Password" ControlStyle-Width="150px" >
                                     <EditItemTemplate>
-                                        <asp:TextBox ID="txtPassword" runat="server" Text='<%# Bind("Password") %>' ValidationGroup="B" />
+                                        <asp:TextBox ID="txtPassword" runat="server" Text='<%# Bind("Password") %>' ValidationGroup="B" TextMode="Password" />
                                         <asp:RequiredFieldValidator ID="reqPassword" runat="server" ErrorMessage='<%# GetUIString("CNXVALIDATORPWDMESSAGE") %>' ControlToValidate="txtPassword" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" ValidationGroup="B" ></asp:RequiredFieldValidator>
                                     </EditItemTemplate>
                                     <ItemTemplate>
-                                        <asp:TextBox ID="lblPassword" runat="server" Text='<%# Bind("Password") %>' Enabled="false" BorderStyle="None" ValidationGroup="B" />
+                                        <asp:TextBox ID="lblPassword" runat="server" Text='<%# Bind("Password") %>' Enabled="false" BorderStyle="None" ValidationGroup="B" TextMode="Password" />
                                     </ItemTemplate>
                                     <FooterTemplate>
                                         <br />
@@ -93,7 +107,7 @@ SharePoint Identity Services
                                         <asp:RangeValidator ID="valTimeout" runat="server" ErrorMessage='<%# GetUIString("CNXVALIDATORTIMEOUTMESSAGE") %>' MinimumValue="1" MaximumValue="90" ValidationGroup="A" ControlToValidate="newTimeout" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" Type="Integer" />
                                     </FooterTemplate>
                                 </asp:TemplateField>
-                                <asp:TemplateField HeaderText="Secure" FooterStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center">
+                                <asp:TemplateField HeaderText="SSL" FooterStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center">
                                     <EditItemTemplate>
                                         <asp:CheckBox ID="txtSecure" runat="server" Checked='<%# Bind("Secure") %>' ValidationGroup="B" />
                                     </EditItemTemplate>
@@ -119,13 +133,12 @@ SharePoint Identity Services
                                         <asp:RangeValidator ID="valMaxRows" runat="server" ErrorMessage='<%# GetUIString("CNXVALIDATORROWSMESSAGE") %>' MinimumValue="1" MaximumValue="9999" ValidationGroup="A" ControlToValidate="newMaxRows" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" Type="Integer" />
                                     </FooterTemplate>
                                 </asp:TemplateField>
-
-                                <asp:TemplateField HeaderText="ConnectString" ControlStyle-Width="200px" >
+                                <asp:TemplateField HeaderText="BASE DN (optional)" ControlStyle-Width="350px" >
                                     <EditItemTemplate>
-                                        <asp:TextBox ID="txtConnectString" runat="server" Text='<%# Bind("ConnectString") %>' ValidationGroup="B" Width="200px" />
+                                        <asp:TextBox ID="txtConnectString" runat="server" Text='<%# Bind("ConnectString") %>' ValidationGroup="B" Width="350px" />
                                     </EditItemTemplate>
                                     <ItemTemplate>
-                                        <asp:TextBox ID="lblConnectString" runat="server" Text='<%# Bind("ConnectString") %>' Enabled="false" BorderStyle="None" ValidationGroup="B" Width="200px"/>
+                                        <asp:TextBox ID="lblConnectString" runat="server" Text='<%# Bind("ConnectString") %>' Enabled="false" BorderStyle="None" ValidationGroup="B" Width="350px"/>
                                     </ItemTemplate>
                                     <FooterTemplate>
                                         <br />

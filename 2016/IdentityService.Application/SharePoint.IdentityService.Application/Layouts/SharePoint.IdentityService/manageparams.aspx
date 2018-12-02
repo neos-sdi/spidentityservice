@@ -101,7 +101,7 @@ SharePoint Identity Services
                                                     <asp:DropDownList ID="txtClaimRoleMode" runat="server" ValidationGroup="B" Width="350px" SelectedValue='<%# Bind("ClaimRoleMode") %>' DataSourceID="DropSourceClaimRoleMode" DataTextField="Text" DataValueField="Value" /> 
                                                 </td>
                                             </tr>
-                                            <tr>
+                                                                                        <tr>
                                                 <td style="width: 15px" ></td>
                                                 <td style="width: 350px" >
                                                     <asp:CheckBox ID="CheckBoxUserkey" runat="server" Text='<%# GetUIString("PRMSUPPORTSUSERKEY") %>'  ValidationGroup="B" Width="350px" Checked='<%# Bind("SupportsUserKey") %>' />
@@ -316,6 +316,7 @@ SharePoint Identity Services
                                                 <td>
                                                 </td>
                                             </tr>
+
                                             <tr>
                                                 <td colspan="4" style="height: 40px" valign="bottom">
                                                     <asp:Label ID="Label24" runat="server" Text='<%# GetUIString("PRMREPOSITORYDESC") %>' Font-Size="Larger" Font-Bold="True"></asp:Label>

@@ -19,7 +19,7 @@ namespace SharePoint.IdentityService.LDAP
         private short _defaulttimeout = 30;
         private bool _usesecureconnection = false;
         private int _maxrowsperdomain = 200;
-        private IGlobalParams _adprm;
+        private LDAPGlobalParams _adprm;
         private bool _isloaded = false;
         private string _providername;
         private static object lokobj = new Object();
@@ -57,6 +57,7 @@ namespace SharePoint.IdentityService.LDAP
                 this.DomainConfigurations.Add(new LDAPDomainConfigurations(f.DnsName, f.DisplayName, f.UserName, f.Password, f.Timeout, f.Enabled, f.Secure, f.Maxrows, f.DisplayPosition, f.ConnectString));
             }
             _adprm = new LDAPGlobalParams();
+            _adprm.ClaimProviderSupportsUserKey = true; // Set Default if Database not Upgraded
             foreach (ProxyGeneralParameter p in AllParams)
             {
                 if (p.ParamName.ToLower().Trim().Equals("smoothrequestor"))
@@ -95,6 +96,10 @@ namespace SharePoint.IdentityService.LDAP
                 {
                     GlobalParams.ShowSystemNodes = bool.Parse(p.ParamValue);
                 }
+                else if (p.ParamName.ToLower().Trim().Equals("supportsuserkey"))
+                {
+                    GlobalParams.ClaimProviderSupportsUserKey = bool.Parse(p.ParamValue);
+                }
             }
         }
 
@@ -107,7 +112,7 @@ namespace SharePoint.IdentityService.LDAP
         }
 
 
-        public IGlobalParams GlobalParams
+        public LDAPGlobalParams GlobalParams
         {
             get { return _adprm; }
         }
@@ -423,9 +428,6 @@ namespace SharePoint.IdentityService.LDAP
                 lstdom = this.Domains;
             foreach (ProxyDomain dom in lstdom)
             {
-                ProxyResultsNode nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
-                AddNodeIfNotExists(lst, nd);
-
                 DirectoryEntry domain = GetDomainEntry(dom, out timeout, out maxrows);
                 if (domain == null)
                     return;
@@ -470,13 +472,20 @@ namespace SharePoint.IdentityService.LDAP
 
                         using (DirectorySearcher dsusr = new DirectorySearcher(domain, qryldap))
                         {
+                            ProxyResultsNode nd = null;
                             ConfigureSearcherForUsers(dsusr, maxrows, timeout);
                             using (SearchResultCollection resultsusr = dsusr.FindAll())
                             {
+
                                 foreach (SearchResult sr in resultsusr)
                                 {
                                     try
                                     {
+                                        if (nd == null)
+                                        {
+                                            nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
+                                            AddNodeIfNotExists(lst, nd);
+                                        }
                                         AddResultIfNotExists(nd, CreateProxyUser(dom, sr));
                                     }
                                     catch (Exception E)
@@ -518,9 +527,6 @@ namespace SharePoint.IdentityService.LDAP
                 return;
             foreach (ProxyDomain dom in this.Domains)
             {
-                ProxyResultsNode nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
-                AddNodeIfNotExists(lst, nd);
-
                 DirectoryEntry domain = GetDomainEntry(dom, out timeout, out maxrows);
                 if (domain == null)
                     return;
@@ -566,6 +572,7 @@ namespace SharePoint.IdentityService.LDAP
 
                         using (DirectorySearcher dsusr = new DirectorySearcher(domain, qryldap))
                         {
+                            ProxyResultsNode nd = null;
                             ConfigureSearcherForUsers(dsusr, maxrows, timeout);
                             using (SearchResultCollection resultsusr = dsusr.FindAll())
                             {
@@ -592,6 +599,11 @@ namespace SharePoint.IdentityService.LDAP
                                     {
                                         try
                                         {
+                                            if (nd == null)
+                                            {
+                                                nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
+                                                AddNodeIfNotExists(lst, nd);
+                                            }
                                             AddResultIfNotExists(nd, CreateProxyUser(dom, sr));
                                         }
                                         catch (Exception E)
@@ -605,6 +617,8 @@ namespace SharePoint.IdentityService.LDAP
                                 {
                                     foreach (ProxyUser babe in babes)
                                     {
+                                        if (nd == null)
+                                            AddNodeIfNotExists(lst, CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position));
                                         AddResultIfNotExists(nd, babe);
                                     }
                                 }
@@ -641,9 +655,6 @@ namespace SharePoint.IdentityService.LDAP
                 return;
             foreach (ProxyDomain dom in this.Domains)
             {
-                ProxyResultsNode nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
-                AddNodeIfNotExists(lst, nd);
-
                 DirectoryEntry domain = GetDomainEntry(dom, out timeout, out maxrows);
                 if (domain == null)
                     return;
@@ -689,6 +700,7 @@ namespace SharePoint.IdentityService.LDAP
 
                         using (DirectorySearcher dsusr = new DirectorySearcher(domain, qryldap))
                         {
+                            ProxyResultsNode nd = null;
                             ConfigureSearcherForUsers(dsusr, maxrows, timeout);
 
                             SearchResult resultsusr = dsusr.FindOne();
@@ -696,6 +708,8 @@ namespace SharePoint.IdentityService.LDAP
                             {
                                 try
                                 {
+                                    nd = CreateProxyNode(dom.DnsName, dom.DisplayName, dom.Position);
+                                    AddNodeIfNotExists(lst, nd);
                                     AddResultIfNotExists(nd, CreateProxyUser(dom, resultsusr));
                                 }
                                 catch (Exception E)
@@ -788,11 +802,12 @@ namespace SharePoint.IdentityService.LDAP
             if (!lst.HasResults)
             {
                 lst.Results.Add(obj);
+                lst.HasResults = true;
                 return true;
             }
             else
             {
-                if (obj is IUser)
+                if (obj is ProxyUser)
                 {
                     foreach (ProxyResultObject xobj in lst.Results)
                     {
@@ -802,8 +817,9 @@ namespace SharePoint.IdentityService.LDAP
                                 return false;
                         }
                     }
+                    lst.Results.Add(obj);
+                    lst.HasResults = true;
                 }
-                lst.Results.Add(obj);
             }
             return true;
         }

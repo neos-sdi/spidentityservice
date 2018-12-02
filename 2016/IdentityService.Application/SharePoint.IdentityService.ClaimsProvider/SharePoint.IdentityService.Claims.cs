@@ -1,4 +1,4 @@
-﻿#define nameidentifier
+﻿// #define bugms
 //******************************************************************************************************************************************************************************************//
 // Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
@@ -22,20 +22,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using Microsoft.SharePoint.Groups;
 
 namespace SharePoint.IdentityService.ClaimsProvider
 {
     #region ClaimProvider
     public class IdentityServiceClaimsProvider : SPClaimProvider
     {
+        private static object _lockobj = new Object();
         private string _displayname;
         private string _localizeddisplayname;
         private string _trustedloginprovidername;
         private bool _iscontextloaded = false;
         private string _useridentityclaim = ""; //ClaimType.ClaimUPN; // to be overriden
         private string _roleidentityclaim = ""; //ClaimType.ClaimRole; // to be overriden
-        private bool _supportsuserkey = true; // to be overriden
+        private bool _supportsuserkey = true; // to be overriden;
         private IdentityServiceClient _ad = null;
         private ProxyClaimsMode _claimsmode = ProxyClaimsMode.Federated;  // to be overriden
         private ProxyClaimsIdentityMode _claimidentitymode = ProxyClaimsIdentityMode.UserPrincipalName; // Can be overriden 
@@ -50,11 +50,18 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// </summary>
         public IdentityServiceClaimsProvider(string displayName): base(displayName)
         {
-            _displayname = displayName;
-            if (!Debugger.IsAttached)
-                Debugger.Launch();
-            Debugger.Break();
+            lock (_lockobj)
+            {
 
+                _displayname = displayName;
+                try
+                {
+                    EnsureContext();
+                }
+                catch
+                {
+                }
+            }
         }
 
         /// <summary>
@@ -231,7 +238,11 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// </summary>
         public override bool SupportsUserKey 
         {
+#if bugms
+            get { return false; }
+#else
             get { return _supportsuserkey; }
+#endif
         }
 
         /// <summary>
@@ -241,7 +252,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
         {
             EnsureContext();
             return _useridentityclaim;
-        } 
+        }
 
         /// <summary>
         /// GetUserKeyForEntity method override
@@ -253,9 +264,9 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 return entity;
             else
                 return new SPClaim(_useridentityclaim, entity.Value, entity.ValueType, entity.OriginalIssuer);
-        } 
+        }
 
-        #region Claims Augmentation
+#region Claims Augmentation
         /// <summary>
         /// FillClaimTypes method override
         /// </summary>
@@ -354,7 +365,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 }
             }
         }
-        #endregion
+#endregion
 
         // The claim from this provider should have redhook as the provider name.
         private SPClaim CreateClaimForSTS(string claimtype, string claimValue)
@@ -394,7 +405,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
             return this._roleidentityclaim.ToLowerInvariant().Equals("http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid");
         }
 
-        #region FillSearch
+#region FillSearch
         /// <summary>
         /// FillSearch method override
         /// </summary>
@@ -472,9 +483,9 @@ namespace SharePoint.IdentityService.ClaimsProvider
             else
                 CreateWindowsClaimsSearchedPickerEntity(usr, searchNode);
         }
-        #endregion
+#endregion
 
-        #region FillResolve
+#region FillResolve
         /// <summary>
         /// FillResolve method override
         /// Required for resoving a user.
@@ -588,9 +599,9 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 CreateWindowsClaimsResolvedPickerEntity(usr, resolved);
         }
 
-        #endregion
+#endregion
 
-        #region PickerEntity
+#region PickerEntity
         /// <summary>
         /// CreateFederatedClaimsSearchedPickerEntity
         /// </summary>
@@ -1050,9 +1061,9 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 return;
             }
         }
-        #endregion
+#endregion
 
-        #region FillHierarchy
+#region FillHierarchy
 
         /// <summary>
         /// FillHierarchy method implementation
@@ -1097,7 +1108,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 throw E;
             }
         }
-        #endregion
+#endregion
     }
-    #endregion
+#endregion
 }

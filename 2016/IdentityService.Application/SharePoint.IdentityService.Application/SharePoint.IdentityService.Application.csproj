@@ -327,7 +327,6 @@
     <Content Include="Resources\SharePoint.IdentityService.Administration.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SharePoint.IdentityService.Administration.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -381,8 +380,8 @@
   <Import Project="$(VSToolsPath)\SharePointTools\Microsoft.VisualStudio.SharePoint.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\SharePointTools\Microsoft.VisualStudio.SharePoint.targets" Condition="false" />
   <PropertyGroup>
-    <PostBuildEvent>rem "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\gacutil" -u "$(TargetFileName)"
-rem "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\gacutil" -i "$(TargetPath)"
+    <PostBuildEvent>rem "C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A\bin\NETFX 4.0 Tools\x64\gacutil" -u "$(TargetFileName)"
+rem "C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A\bin\NETFX 4.0 Tools\x64\gacutil" -i "$(TargetPath)"
 rem iisreset</PostBuildEvent>
   </PropertyGroup>
 </Project>

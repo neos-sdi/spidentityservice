@@ -5,7 +5,6 @@ GO
 SET ANSI_PADDING ON
 GO
 
-
 INSERT INTO [dbo].[GeneralParameters] ([ParamName], [ParamValue]) VALUES ('SupportsUserKey', 'true')
 GO
 

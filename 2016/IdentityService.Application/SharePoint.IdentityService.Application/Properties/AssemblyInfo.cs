@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("NEOS-SDI")]
 [assembly: AssemblyProduct("SharePoint IdentityService Application")]
-[assembly: AssemblyCopyright("Copyright © NEOS-SDI 2016")]
+[assembly: AssemblyCopyright("Copyright © NEOS-SDI 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -34,5 +34,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("16.0.0.0")]
-[assembly: AssemblyFileVersion("16.0.0.2")]
+[assembly: AssemblyFileVersion("16.0.1.1")]
 [assembly: NeutralResourcesLanguageAttribute("")]

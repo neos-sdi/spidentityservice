@@ -114,7 +114,6 @@ namespace SharePoint.IdentityService.ActiveDirectory
         public static string GetString(string value)
         {
             return SPUtility.GetLocalizedString("$Resources:" + value, resfilename, cultureid);
-           // return SPUtility.GetLocalizedString("$Resources:" + value, resfilename, Convert.ToUInt32(Thread.CurrentThread.CurrentCulture.LCID));
         }
 
         /// <summary>

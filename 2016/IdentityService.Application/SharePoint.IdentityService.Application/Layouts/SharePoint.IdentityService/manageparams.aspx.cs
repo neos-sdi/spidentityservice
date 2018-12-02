@@ -187,7 +187,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// Constructor
         /// </summary>
         public GlobalParameterWrapper(int cacheduration, ProxyClaimsDisplayMode claimsdisplaymode, string claimdisplayname, ProxyClaimsIdentityMode claimidentitymode, string claimidentity, string claimprovidername,
-                               ProxyClaimsRoleMode claimrolemode, string claimrole, ProxyClaimsMode claimsmode, ProxyClaimsDisplayMode peoplepickerdisplaymode, bool supportsuserkey, bool peoplepickerimages, bool searchbydisplayname,
+                               ProxyClaimsRoleMode claimrolemode, string claimrole, ProxyClaimsMode claimsmode, ProxyClaimsDisplayMode peoplepickerdisplaymode, bool peoplepickerimages, bool supportsuserkey, bool searchbydisplayname,
                                bool searchbymail, bool showsystemnodes, ProxySmoothRequest smoothrequestor, string trustedloginprovidername)
         {
             this.CacheDuration = cacheduration;
@@ -220,7 +220,6 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         public ProxyClaimsMode ClaimsMode { get; set; }
         public ProxyClaimsDisplayMode PeoplePickerDisplayMode { get; set; }
         public bool PeoplePickerImages { get; set; }
-        public bool SupportsUserKey { get; set; }
         public bool SearchByDisplayName { get; set; }
         public bool SearchByMail { get; set; }
         public bool ShowSystemNodes { get; set; }
@@ -228,7 +227,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         public string TrustedLoginProviderName { get; set; }
 
         public IdentityServiceApplication ServiceApplication { get; set; }
-
+        public bool SupportsUserKey { get; set; }
 
         /// <summary>
         /// Select method implementation
@@ -239,7 +238,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
             List<GlobalParameter> src = serviceapplication.GetGlobalParameterList().ToList<GlobalParameter>();
             foreach (GlobalParameter glb in src)
             {
-                lst.Add(new GlobalParameterWrapper(glb.CacheDuration, glb.ClaimsDisplayMode, glb.ClaimDisplayName, glb.ClaimIdentityMode, glb.ClaimIdentity, glb.ClaimProviderName, glb.ClaimRoleMode, glb.ClaimRole, glb.ClaimsMode, glb.PeoplePickerDisplayMode, glb.SupportsUserKey, glb.PeoplePickerImages, glb.SearchByDisplayName, glb.SearchByMail, glb.ShowSystemNodes, glb.SmoothRequestor, glb.TrustedLoginProviderName));
+                lst.Add(new GlobalParameterWrapper(glb.CacheDuration, glb.ClaimsDisplayMode, glb.ClaimDisplayName, glb.ClaimIdentityMode, glb.ClaimIdentity, glb.ClaimProviderName, glb.ClaimRoleMode, glb.ClaimRole, glb.ClaimsMode, glb.PeoplePickerDisplayMode, glb.PeoplePickerImages, glb.SupportsUserKey, glb.SearchByDisplayName, glb.SearchByMail, glb.ShowSystemNodes, glb.SmoothRequestor, glb.TrustedLoginProviderName));
             }
             return lst;
         }
@@ -249,8 +248,8 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// </summary>
         public static void Update(GlobalParameterWrapper values, GlobalParameterWrapper __values)
         {
-            __values.ServiceApplication.SetGlobalParameter(new GlobalParameter(__values.CacheDuration, __values.ClaimsDisplayMode, __values.ClaimDisplayName, __values.ClaimIdentityMode, __values.ClaimIdentity, __values.ClaimProviderName, __values.ClaimRoleMode, __values.ClaimRole, __values.ClaimsMode, __values.PeoplePickerDisplayMode, __values.SupportsUserKey, __values.PeoplePickerImages, __values.SearchByDisplayName, __values.SearchByMail, __values.ShowSystemNodes, __values.SmoothRequestor, __values.TrustedLoginProviderName),
-                                                           new GlobalParameter(values.CacheDuration, values.ClaimsDisplayMode, values.ClaimDisplayName, values.ClaimIdentityMode, values.ClaimIdentity, values.ClaimProviderName, values.ClaimRoleMode, values.ClaimRole, values.ClaimsMode, values.PeoplePickerDisplayMode, values.SupportsUserKey, values.PeoplePickerImages, values.SearchByDisplayName, values.SearchByMail, values.ShowSystemNodes, values.SmoothRequestor, values.TrustedLoginProviderName));
+            __values.ServiceApplication.SetGlobalParameter(new GlobalParameter(__values.CacheDuration, __values.ClaimsDisplayMode, __values.ClaimDisplayName, __values.ClaimIdentityMode, __values.ClaimIdentity, __values.ClaimProviderName, __values.ClaimRoleMode, __values.ClaimRole, __values.ClaimsMode, __values.PeoplePickerDisplayMode, __values.PeoplePickerImages, __values.SupportsUserKey, __values.SearchByDisplayName, __values.SearchByMail, __values.ShowSystemNodes, __values.SmoothRequestor, __values.TrustedLoginProviderName),
+                                                           new GlobalParameter(values.CacheDuration, values.ClaimsDisplayMode, values.ClaimDisplayName, values.ClaimIdentityMode, values.ClaimIdentity, values.ClaimProviderName, values.ClaimRoleMode, values.ClaimRole, values.ClaimsMode, values.PeoplePickerDisplayMode, values.PeoplePickerImages, values.SupportsUserKey, values.SearchByDisplayName, values.SearchByMail, values.ShowSystemNodes, values.SmoothRequestor, values.TrustedLoginProviderName));
         }
     }
     #endregion

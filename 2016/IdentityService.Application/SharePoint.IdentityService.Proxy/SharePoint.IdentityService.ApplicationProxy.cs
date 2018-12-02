@@ -188,7 +188,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public ProxyResults FillSearch(string pattern, string domain, bool recursive)
         {
-            return Execute("FillSearch", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillSearch(pattern, domain, recursive));
+            ProxyResults results= null;
+            ExecuteOnChannel("FillSearch", ExecuteOptions.AsProcess, channel => results = channel.FillSearch(pattern, domain, recursive));
+            return results;
         }
 
         /// <summary>
@@ -196,7 +198,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public ProxyResults FillResolve(string pattern, bool recursive)
         {
-            return Execute("FillResolve", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillResolve(pattern, recursive));
+            ProxyResults results = null;
+            ExecuteOnChannel("FillResolve", ExecuteOptions.AsProcess, channel => results = channel.FillResolve(pattern, recursive));
+            return results;
         }
 
         /// <summary>
@@ -204,15 +208,20 @@ namespace SharePoint.IdentityService
         /// </summary>
         public ProxyResults FillValidate(string pattern, bool recursive)
         {
-            return Execute("FillValidate", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillValidate(pattern, recursive));
+            ProxyResults results = null;
+            ExecuteOnChannel("FillValidate", ExecuteOptions.AsProcess, channel => results = channel.FillValidate(pattern, recursive));
+            return results;
         }
+
 
         /// <summary>
         /// FillHierarchy method implementation
         /// </summary>
         public ProxyDomain FillHierarchy(string hierarchyNodeID, int numberOfLevels)
         {
-            return Execute("FillHierarchy", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillHierarchy(hierarchyNodeID, numberOfLevels));
+            ProxyDomain results = null;
+            ExecuteOnChannel("FillHierarchy", ExecuteOptions.AsProcess, channel => results = channel.FillHierarchy(hierarchyNodeID, numberOfLevels));
+            return results;
         }
 
         /// <summary>
@@ -220,7 +229,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public List<ProxyClaims> FillAdditionalClaims(string entity)
         {
-            return Execute("FillAdditionalClaims", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillAdditionalClaims(entity));
+            List<ProxyClaims> results = null;
+            ExecuteOnChannel("FillAdditionalClaims", ExecuteOptions.AsProcess, channel => results = channel.FillAdditionalClaims(entity));
+            return results;
         }
 
         /// <summary>
@@ -228,7 +239,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public List<ProxyBadDomain> FillBadDomains()
         {
-            return Execute("FillBadDomains", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillBadDomains());
+            List<ProxyBadDomain> results = null;
+            ExecuteOnChannel("FillBadDomains", ExecuteOptions.AsProcess, channel => results = channel.FillBadDomains());
+            return results;
         }
 
         /// <summary>
@@ -236,7 +249,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public string GetServiceApplicationName()
         {
-            return Execute("GetServiceApplicationName", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.GetServiceApplicationName());
+            string result = null;
+            ExecuteOnChannel("GetServiceApplicationName", ExecuteOptions.AsProcess, channel => result = channel.GetServiceApplicationName());
+            return result;
         }
 
         /// <summary>
@@ -244,7 +259,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         public List<ProxyGeneralParameter> FillGeneralParameters()
         {
-            return Execute("FillGeneralParameters", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillGeneralParameters());
+            List<ProxyGeneralParameter> result = null;
+            ExecuteOnChannel("FillGeneralParameters", ExecuteOptions.AsProcess, channel => result = channel.FillGeneralParameters());
+            return result;
         }
 
         /// <summary>
@@ -253,7 +270,9 @@ namespace SharePoint.IdentityService
         /// <returns></returns>
         public ProxyClaimsProviderParameters FillClaimsProviderParameters()
         {
-            return Execute("FillClaimsProviderParameters", ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.FillClaimsProviderParameters());
+            ProxyClaimsProviderParameters result = null;
+            ExecuteOnChannel("FillClaimsProviderParameters", ExecuteOptions.AsProcess, channel => result = channel.FillClaimsProviderParameters());
+            return result;
         }
 
         /// <summary>
@@ -262,7 +281,7 @@ namespace SharePoint.IdentityService
         /// <param name="uri"></param>
         public void LaunchStartCommand(string machine)
         {
-           Invoke<IIdentityServiceContract>("LaunchStartCommand", machine, ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.LaunchStartCommand());
+            ExecuteOnSpecificChannel("LaunchStartCommand", machine, ExecuteOptions.AsProcess, channel => channel.LaunchStartCommand());
         }
 
         /// <summary>
@@ -271,7 +290,7 @@ namespace SharePoint.IdentityService
         /// <param name="uri"></param>
         public void LaunchReloadCommand(string machine)
         {
-            Execute("LaunchReladCommand", machine, ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.Reload());
+            ExecuteOnSpecificChannel("LaunchReladCommand", machine, ExecuteOptions.AsProcess, channel => channel.Reload());
         }
 
         /// <summary>
@@ -280,23 +299,55 @@ namespace SharePoint.IdentityService
         /// <param name="uri"></param>
         public void LaunchClearCacheCommand(string machine)
         {
-            Execute("LaunchClearCacheCommand", machine, ExecuteOptions.AsProcess, (IIdentityServiceContract channel) => channel.ClearCache());
+            ExecuteOnSpecificChannel("LaunchClearCacheCommand", machine, ExecuteOptions.AsProcess, channel => channel.ClearCache());
         }
 
         #endregion
 
         #region Execution Procedures
-        private delegate T ExecuteDelegate<T>(IIdentityServiceContract serviceContract);
-        private delegate void InvokeDelegate<T>(IIdentityServiceContract serviceContract);
+
+        internal delegate void CodeToRunOnApplicationProxy(ServiceApplicationProxy applicationProxy);
+        private delegate void CodeToRunOnChannel(IIdentityServiceContract serviceContract);
+
+        /// <summary>
+        /// GetProxy method implementation
+        /// </summary>
+        public static ServiceApplicationProxy GetProxy(SPServiceContext serviceContext)
+        {
+            if (serviceContext == null)
+            {
+                throw new ArgumentNullException("serviceContext");
+            }
+            return (serviceContext.GetDefaultProxy(typeof(ServiceApplicationProxy)) as ServiceApplicationProxy);
+        }
+
+
+        /// <summary>
+        /// Static invoke method implementation
+        /// </summary>
+        internal static void Invoke(SPServiceContext serviceContext, CodeToRunOnApplicationProxy codeBlock)
+        {
+            if (null == serviceContext)
+            {
+                throw new ArgumentNullException("serviceContext");
+            }
+            ServiceApplicationProxy proxy = (ServiceApplicationProxy)serviceContext.GetDefaultProxy(typeof(ServiceApplicationProxy));
+            if (null == proxy)
+            {
+                throw new InvalidOperationException("SharePoint Identity Proxy not found.");
+            }
+            using (new SPServiceContextScope(serviceContext))
+            {
+                codeBlock(proxy);
+            }
+        }
 
         /// <summary>
         /// ExecuteOnChannel method implementation
         /// </summary>
-        private T Execute<T>(string operationName, ExecuteOptions options, ExecuteDelegate<T> operation)
+        private void ExecuteOnChannel(string operationName, ExecuteOptions options, CodeToRunOnChannel codeBlock)
         {
-            T result;
-            object obj = null;
-            using (new SPMonitoredScope("Execute :" + operationName))
+            using (new SPMonitoredScope("ExecuteOnChannel:" + operationName))
             {
                 bool mustexit = false;
                 string firstaddress = "";
@@ -314,12 +365,11 @@ namespace SharePoint.IdentityService
                                 if (string.IsNullOrEmpty(firstaddress))
                                     firstaddress = loadBalancerContext.EndpointAddress.ToString();
 
-                                IIdentityServiceContract identityapplication = GetChannel(loadBalancerContext.EndpointAddress, options);
-                                IClientChannel clientChannel = identityapplication as IClientChannel;
+                                IChannel channel = (IChannel)GetChannel(loadBalancerContext.EndpointAddress, options);
                                 try
                                 {
-                                    obj = operation(identityapplication);
-                                    clientChannel.Close();
+                                    codeBlock((IIdentityServiceContract)channel);
+                                    channel.Close();
                                     mustexit = true;
                                 }
                                 catch (TimeoutException)
@@ -332,9 +382,9 @@ namespace SharePoint.IdentityService
                                 }
                                 finally
                                 {
-                                    if (clientChannel.State != CommunicationState.Closed)
+                                    if (channel.State != CommunicationState.Closed)
                                     {
-                                        clientChannel.Abort();
+                                        channel.Abort();
                                     }
                                 }
                             }
@@ -346,71 +396,148 @@ namespace SharePoint.IdentityService
                     }
                 } 
                 while (!mustexit);
-                result = (T)((object)obj);
             }
-            return result;
         }
 
         /// <summary>
-        /// Execute method implementation
+        /// ExecuteOnChannel method implementation
         /// </summary>
-        private T Execute<T>(string operationName, string uri, ExecuteOptions options, ExecuteDelegate<T> operation)
+        private void ExecuteOnSpecificChannel(string operationName, string uri, ExecuteOptions options, CodeToRunOnChannel codeBlock)
         {
-            T result;
-            object obj = null;
-            using (new SPMonitoredScope("Execute :" + operationName+"_"+uri))
+            using (new SPMonitoredScope("ExecuteSpecificChannel:" + operationName))
             {
-                string ep = FindLoadBalancerEndPoint(uri);
-                if (!string.IsNullOrEmpty(ep))
+                try
                 {
-                    Uri xu = new Uri(ep);
-                    IIdentityServiceContract identityapplication = GetChannel(xu, options);
-                    IClientChannel clientChannel = identityapplication as IClientChannel;
-                    try
+                    string ep = FindLoadBalancerEndPoint(uri);
+                    if (!string.IsNullOrEmpty(ep))
                     {
-                        obj = operation(identityapplication);
-                        clientChannel.Close();
-                    }
-                    finally
-                    {
-                        if (clientChannel.State != CommunicationState.Closed)
+                        Uri xu = new Uri(ep);
+                        IChannel channel = (IChannel)GetChannel(xu, options);
+                        try
                         {
-                            clientChannel.Abort();
+                            codeBlock((IIdentityServiceContract)channel);
+                            channel.Close();
+                        }
+                        finally
+                        {
+                            if (channel.State != CommunicationState.Closed)
+                            {
+                                channel.Abort();
+                            }
                         }
                     }
                 }
+                finally
+                {
+
+                }
             }
-            return result = (T)((object)obj);
         }
 
         /// <summary>
-        /// Invoke method implementation
+        /// ExecuteOnChannel method implementation
         /// </summary>
-        private T Invoke<T>(string operationName, string uri, ExecuteOptions options, InvokeDelegate<T> operation)
+        private void ExecuteOnAllChannel(string operationName, ExecuteOptions options, CodeToRunOnChannel codeBlock)
         {
-            using (new SPMonitoredScope("Invoke :" + operationName + "_" + uri))
+            using (new SPMonitoredScope("ExecuteOnAllChannel:" + operationName))
             {
-                string ep = FindLoadBalancerEndPoint(uri);
-                if (!string.IsNullOrEmpty(ep))
+                bool mustexit = false;
+                string firstaddress = "";
+                do
                 {
-                    Uri xu = new Uri(ep);
-                    IIdentityServiceContract identityapplication = GetChannel(xu, options);
-                    IClientChannel clientChannel = identityapplication as IClientChannel;
+                    SPServiceLoadBalancerContext loadBalancerContext = m_LoadBalancer.BeginOperation();
                     try
                     {
-                        operation(identityapplication);
-                        clientChannel.Close();
+                        if (firstaddress.Equals(loadBalancerContext.EndpointAddress.ToString()))
+                            mustexit = true;
+                        if (!mustexit)
+                        {
+                            if ((loadBalancerContext.Status == SPServiceLoadBalancerStatus.Succeeded))
+                            {
+                                if (string.IsNullOrEmpty(firstaddress))
+                                    firstaddress = loadBalancerContext.EndpointAddress.ToString();
+
+                                IChannel channel = (IChannel)GetChannel(loadBalancerContext.EndpointAddress, options);
+                                try
+                                {
+                                    codeBlock((IIdentityServiceContract)channel);
+                                    channel.Close();
+                                }
+                                catch (TimeoutException)
+                                {
+                                    loadBalancerContext.Status = SPServiceLoadBalancerStatus.Failed;
+                                }
+                                catch (EndpointNotFoundException)
+                                {
+                                    loadBalancerContext.Status = SPServiceLoadBalancerStatus.Failed;
+                                }
+                                finally
+                                {
+                                    if (channel.State != CommunicationState.Closed)
+                                    {
+                                        channel.Abort();
+                                    }
+                                }
+                            }
+                        }
                     }
                     finally
                     {
-                        if (clientChannel.State != CommunicationState.Closed)
+                        loadBalancerContext.EndOperation();
+                    }
+                } while (!mustexit);
+            }
+        }
+
+        /// <summary>
+        /// GetLoadBalancerEndPoint method implementation
+        /// </summary>
+        private Uri GetLoadBalancerEndPoint()
+        {
+            string res = string.Empty;
+            using (new SPMonitoredScope("GetLoadBalancerEndPoint"))
+            {
+                bool mustexit = false;
+                string firstaddress = string.Empty;
+                do
+                {
+                    SPServiceLoadBalancerContext loadBalancerContext = m_LoadBalancer.BeginOperation();
+                    try
+                    {
+                        if (firstaddress.Equals(loadBalancerContext.EndpointAddress.ToString()))
+                        { 
+                            mustexit = true;
+                            res = firstaddress;
+                        }
+                        if (!mustexit)
                         {
-                            clientChannel.Abort();
+                            if ((loadBalancerContext.Status == SPServiceLoadBalancerStatus.Succeeded))
+                            {
+                                if (string.IsNullOrEmpty(firstaddress))
+                                { 
+                                    firstaddress = loadBalancerContext.EndpointAddress.ToString();
+                                }
+                                mustexit = true;
+                                res = firstaddress;
+                            }
                         }
                     }
+                    catch (TimeoutException)
+                    {
+                        loadBalancerContext.Status = SPServiceLoadBalancerStatus.Failed;
+                    }
+                    catch (EndpointNotFoundException)
+                    {
+                        loadBalancerContext.Status = SPServiceLoadBalancerStatus.Failed;
+                    }
+                    finally
+                    {
+                        loadBalancerContext.EndOperation();
+                    }
                 }
+                while (!mustexit);
             }
-            return default(T);
+            return new Uri(res);
         }
 
         /// <summary>
@@ -482,7 +609,6 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// GetChannel method implementation
         /// </summary>
-        [System.Security.Permissions.PermissionSet(System.Security.Permissions.SecurityAction.Assert, Name = "FullTrust")]
         private IIdentityServiceContract GetChannel(Uri address, ExecuteOptions options)
         {
             string endpointConfigurationName = GetEndpointConfigurationName(address);
@@ -497,14 +623,16 @@ namespace SharePoint.IdentityService
                     }
                 }
             }
+            IIdentityServiceContract channel;
             if (ExecuteOptions.AsProcess == (options & ExecuteOptions.AsProcess))
             {
-                return m_ChannelFactory.CreateChannelAsProcess<IIdentityServiceContract>(new EndpointAddress(address));
+                channel = m_ChannelFactory.CreateChannelAsProcess<IIdentityServiceContract>(new EndpointAddress(address));
             }
             else
             {
-                return m_ChannelFactory.CreateChannelActingAsLoggedOnUser<IIdentityServiceContract>(new EndpointAddress(address));
+                channel = m_ChannelFactory.CreateChannelActingAsLoggedOnUser<IIdentityServiceContract>(new EndpointAddress(address));
             }
+            return channel;
         }
 
         /// <summary>
@@ -512,8 +640,11 @@ namespace SharePoint.IdentityService
         /// </summary>
         private ChannelFactory<T> CreateChannelFactory<T>(string endpointConfigurationName)
         {
+            // string clientConfigurationPath = Microsoft.SharePoint.Utilities.SPUtility.GetGenericSetupPath(@"WebClients\SharePoint.IdentityService");
+            // string clientConfigurationPath = Microsoft.SharePoint.Utilities.SPUtility.GetVersionedGenericSetupPath(@"WebClients\SharePoint.IdentityService", 15);
             string clientConfigurationPath = Microsoft.SharePoint.Utilities.SPUtility.GetCurrentGenericSetupPath(@"WebClients\SharePoint.IdentityService");
-            Configuration clientConfiguration = this.OpenClientConfiguration(clientConfigurationPath);
+
+            Configuration clientConfiguration = OpenClientConfiguration(clientConfigurationPath);
             ConfigurationChannelFactory<T> factory = new ConfigurationChannelFactory<T>(endpointConfigurationName, clientConfiguration, null);
             factory.ConfigureCredentials(SPServiceAuthenticationMode.Claims);
             return factory;

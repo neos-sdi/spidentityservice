@@ -13,29 +13,30 @@
 //                                                                                                                                                                                          //
 //******************************************************************************************************************************************************************************************//
 
+using SharePoint.IdentityService;
+using SharePoint.IdentityService.Core;
+using System;
+
 namespace SharePoint.IdentityService
 {
+    using Microsoft.IdentityModel.WindowsTokenService;
+    using Microsoft.Office.Server.UserProfiles;
+    using Microsoft.SharePoint;
+    using Microsoft.SharePoint.Administration;
+    using Microsoft.SharePoint.Administration.AccessControl;
+    using Microsoft.SharePoint.Utilities;
+    using SharePoint.IdentityService.Core;
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.ServiceModel;
-    using SharePoint.IdentityService.Core;
-    using Microsoft.SharePoint;
-    using Microsoft.SharePoint.Administration;
-    using Microsoft.SharePoint.Administration.AccessControl;
-    using System.Collections.Generic;
-    using Microsoft.Office.Server;
-    using Microsoft.Office.Server.UserProfiles;
-    using Microsoft.SharePoint.Utilities;
-    using System.Diagnostics;
-    using System.Security.Cryptography;
-    using Microsoft.IdentityModel.WindowsTokenService;
-    using System.Xml;
     using System.Threading;
-    using Microsoft.SharePoint.Administration.Claims;
-    using System.Diagnostics.CodeAnalysis;
-  
+    using System.Xml;
+    using System.Linq;
+
     internal static class IdentityServiceCentralAdministrationRights
     {
         public const SPCentralAdministrationRights Write = (SPCentralAdministrationRights)0x1 | SPCentralAdministrationRights.Read;
@@ -48,18 +49,11 @@ namespace SharePoint.IdentityService
     {
         [Persisted]
         private ActiveDirectoryIdentityServiceDatabase m_Database;
-        
-        private static IWrapper _wrapper;
-        private static IIdentityServiceClaimsAugmenter _augmenter;
-        private static object _lockobj = new Object();
-        private Type _typetoload;
-        private Type _typeaugmenter;
-        private bool _trace;
+
+        private static WrapperManager _wrappermanager = null;
         private UserProfileManager _profilemanager;
         private bool _withimages = false;
-        private string _trustedissuer;
         private ProxyClaimsMode _claimmode = ProxyClaimsMode.Windows;
-        
 
         #region Constructors
         /// <summary>
@@ -67,13 +61,6 @@ namespace SharePoint.IdentityService
         /// </summary>
         public IdentityServiceApplication():base()
         {
-            try
-            {
-           //     Initialize();
-            }
-            catch (Exception)
-            {
-            }
         }
 
         /// <summary>
@@ -216,7 +203,7 @@ namespace SharePoint.IdentityService
             }
             catch (Exception e)
             {
-                // ICI mettre log
+                LogEvent.Log(e, e.StackTrace, EventLogEntryType.Error, 20099);
             }
             if (SPObjectStatus.Unprovisioning != base.Status)
             {
@@ -418,73 +405,6 @@ namespace SharePoint.IdentityService
 
         #region Initialization
         /// <summary>
-        /// Loadwrapper method implementation
-        /// </summary>
-        private void Loadwrapper()
-        {
-            using (SPMonitoredScope scp = new SPMonitoredScope("Loadwrapper"))
-            {
-                AssemblyConfiguration cfg = Database.GetAssemblyConfiguration();
-                _trace = cfg.TraceResolve;
-                if (cfg != null)
-                {
-                    if (_typetoload == null)
-                    {
-                        Assembly assembly = Assembly.Load(cfg.AssemblyFulldescription);
-                        _typetoload = assembly.GetType(cfg.AssemblyTypeDescription);
-                        if (_typetoload.IsClass && !_typetoload.IsAbstract && _typetoload.GetInterface("IWrapper") != null)
-                        {
-                            object o = Activator.CreateInstance(_typetoload);
-                            if (o != null)
-                                _wrapper = o as IWrapper;
-                        }
-                        else
-                            _typetoload = null;
-                    }
-                    else
-                    {
-                        object o = Activator.CreateInstance(_typetoload);
-                        if (o != null)
-                            _wrapper = o as IWrapper;
-                    }
-                }
-            }
-            try
-            {
-                using (SPMonitoredScope scp = new SPMonitoredScope("LoadAugmenter"))
-                {
-                    AssemblyConfiguration cfg = Database.GetAssemblyAugmenter();
-                    if (cfg != null)
-                    {
-                        if (_typeaugmenter == null)
-                        {
-                            Assembly assembly = Assembly.Load(cfg.AssemblyFulldescription);
-                            _typeaugmenter = assembly.GetType(cfg.AssemblyTypeDescription);
-                            if (_typeaugmenter.IsClass && !_typeaugmenter.IsAbstract && _typeaugmenter.GetInterface("IIdentityServiceClaimsAugmenter") != null)
-                            {
-                                object o = Activator.CreateInstance(_typeaugmenter);
-                                if (o != null)
-                                    _augmenter = o as IIdentityServiceClaimsAugmenter;
-                            }
-                            else
-                                _augmenter = null;
-                        }
-                        else
-                        {
-                            object o = Activator.CreateInstance(_typeaugmenter);
-                            if (o != null)
-                                _augmenter = o as IIdentityServiceClaimsAugmenter;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Nothing, no errors, no claims augmentation
-            }
-        }
-
-        /// <summary>
         /// Initialize method implementation
         /// </summary>
         private void Initialize()
@@ -497,233 +417,9 @@ namespace SharePoint.IdentityService
         /// </summary>
         private void DoInitialize(bool reset)
         {
-            lock (_lockobj)
-            {
-                if (reset)
-                {
-                    _wrapper = null;
-                    _typetoload = null;
-                    _typeaugmenter = null;
-                    _augmenter = null;
-                }
-                if (_wrapper == null)
-                {
-                    using (SPMonitoredScope scp = new SPMonitoredScope("DoInitialize On"))
-                    {
-                        try
-                        {
-                            Loadwrapper(); // Load extension assembly
-                            string val = Database.GetGeneralParameter("CacheDuration");
-                            if (string.IsNullOrEmpty(val))
-                                val = "15";
-                            ResetAccessCache(Convert.ToDouble(val));
-                            try
-                            {
-                                if (CheckInitializeAccess(val))
-                                    InitializeFromDatabase();
-                                else
-                                    InitializeFromCache();
-                            }
-                            catch (Exception E)
-                            {
-                                Database.ZapCache();
-                                throw E;
-                            }
-                        }
-                        catch (Exception E)
-                        {
-                            LogEvent.Log(E, E.Message, EventLogEntryType.Error, 20000);
-                            _wrapper = null;
-                            throw E;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// GetSharePointCertificate method implementation
-        /// </summary>
-        private string GetSharePointCertificate()
-        {
-            const string errorstr = "Cannot Access to SharePoint Certificate Store, Process cannot continue";
-            string key = null;
-            try
-            {
-                key = IdentityServiceCertificate.GetSharePointCertificate();
-                if (string.IsNullOrEmpty(key))
-                    throw new Exception(errorstr);
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
-                throw E;
-            }
-            return key;
-        }
-
-        /// <summary>
-        /// PasswordDecrypt method implementation
-        /// </summary>
-        private string PasswordDecrypt(string cdata, string key)
-        {
-            const string errorstr = "Cannot decrypt password, Process cannot continue";
-            string data = null;
-            try
-            {
-                data = PasswordManager.Decrypt(cdata, key);
-                if (string.IsNullOrEmpty(data))
-                    throw new Exception(errorstr);
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
-                throw E;
-            }
-            return data;
-        }
-
-        /// <summary>
-        /// PasswordEncrypt method implementation
-        /// </summary>
-        private string PasswordEncrypt(string cdata, string key)
-        {
-            const string errorstr = "Cannot encrypt password, Process cannot continue";
-            string data = null;
-            try
-            {
-                data = PasswordManager.Encrypt(cdata, key);
-                if (string.IsNullOrEmpty(data))
-                    throw new Exception(errorstr);
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
-                throw E;
-            }
-            return data;
-        }
-
-        /// <summary>
-        /// InitializeFromDatabase method implementation
-        /// </summary>
-        private void InitializeFromDatabase()
-        {
-            string key = GetSharePointCertificate();
-
-            IEnumerable<GeneralParameter> glb = Database.GetGeneralParameters();
-            IEnumerable<FullConfiguration> prm = Database.GetFullConfigurations();
-            List<ProxyGeneralParameter> glbpxy = new List<ProxyGeneralParameter>();
-            List<ProxyFullConfiguration> prxy = new List<ProxyFullConfiguration>();
-
-            foreach (FullConfiguration c in prm)
-            {
-                ProxyFullConfiguration p = new ProxyFullConfiguration();
-                p.DisplayName = c.DisplayName;
-                p.DnsName = c.DnsName;
-                p.Enabled = c.Enabled;
-                p.Maxrows = c.Maxrows;
-                p.DisplayPosition = c.DisplayPosition;
-                p.ConnectString = c.ConnectString;
-                try
-                {
-                    p.Password = PasswordDecrypt(c.Password, key);
-                }
-                catch (SharePointIdentityCryptographicException)
-                {
-                    p.Password = c.Password;
-                    ConnectionConfiguration xcfg = new ConnectionConfiguration();
-                    xcfg.ConnectionName = c.Connection;
-                    xcfg.Username = c.UserName;
-                    xcfg.Password = PasswordEncrypt(c.Password, key);
-                    xcfg.Timeout = c.Timeout;
-                    xcfg.Secure = c.Secure;
-                    xcfg.Maxrows = c.Maxrows;
-                    xcfg.ConnectString = c.ConnectString;
-                    Database.SetConnectionConfiguration(null, xcfg); // do insert
-                }
-                p.Secure = c.Secure;
-                p.Timeout = c.Timeout;
-                p.UserName = c.UserName;
-                p.IsDefault = c.Connection.ToLower().Trim().Equals("default");
-                prxy.Add(p);
-            }
-            foreach (GeneralParameter t in glb)
-            {
-                ProxyGeneralParameter x = new ProxyGeneralParameter();
-                x.ParamName = t.ParamName;
-                x.ParamValue = t.ParamValue;
-                glbpxy.Add(x);
-                if (t.ParamName.ToLower().Equals("claimdisplayname"))
-                    _wrapper.ClaimsProviderName = t.ParamValue;
-                if (t.ParamName.ToLower().Equals("peoplepickerimages"))
-                    this._withimages = bool.Parse(t.ParamValue);
-                if (t.ParamName.ToLower().Equals("trustedloginprovidername"))
-                    this._trustedissuer = t.ParamValue;
-                if (t.ParamName.ToLower().Equals("claimsmode"))
-                    this._claimmode = (ProxyClaimsMode)Enum.Parse(typeof(ProxyClaimsMode), t.ParamValue);
-            }
-            ProxyGeneralParameter trc = new ProxyGeneralParameter();
-            trc.ParamName = "TraceResove";
-            trc.ParamValue = _trace.ToString();
-            glbpxy.Add(trc);
-            _wrapper.Initialize(prxy, glbpxy);
-            _wrapper.EnsureLoaded();
-            IWrapperCaching cch = _wrapper as IWrapperCaching;
-            if (cch != null)
-            {
-                XmlDocument res = cch.Save();
-                string data = PasswordEncrypt(res.OuterXml, key);
-                Database.SetDataToCache(data);
-            }
-            Database.ClearAccessToCache();
-        }
-
-        /// <summary>
-        /// InitializeFromCache method implementation
-        /// </summary>
-        private void InitializeFromCache()
-        {
-            string key = GetSharePointCertificate();
-            string cdata = Database.GetDataFromCache();
-            string data = PasswordDecrypt(cdata, key);
-            XmlDocument doc = new XmlDocument();
-            doc.LoadXml(data);
-            IWrapperCaching cch = _wrapper as IWrapperCaching;
-            if (cch != null)
-            {
-                cch.Restore(doc);
-            }
-        }
-
-        /// <summary>
-        /// CheckInitializeAccess method implmentation
-        /// </summary>
-        private bool CheckInitializeAccess(string val)
-        {
-            if (val.ToLowerInvariant().Equals("0"))
-            {
-                return true;
-            }
- 
-            bool trueload = true;
-            bool canaccess = false;
-            do
-            {
-                canaccess = Database.GetAccessTocache(out trueload);
-                if (!canaccess)
-                    Thread.Sleep(1000);
-            }
-            while (!canaccess);
-            return trueload;
-        }
-
-        /// <summary>
-        /// ResetAccessCache method implementation
-        /// </summary>
-        private void ResetAccessCache(double minutes)
-        {
-            Database.ResetAccessCache(minutes);
+            if (_wrappermanager == null)
+                _wrappermanager = new WrapperManager(Database);
+            _wrappermanager.DoInitialize(reset);
         }
         #endregion           
 
@@ -738,7 +434,7 @@ namespace SharePoint.IdentityService
                 using (SPMonitoredScope scp = new SPMonitoredScope("FillSearch"))
                 {
                     Initialize();
-                    ProxyResults res = _wrapper.FillSearch(pattern, domain, recursive);
+                    ProxyResults res = _wrappermanager.FillSearch(pattern, domain, recursive);
                     if (WantPictures())
                     {
                         PatchUsersWithPictureUrl(res);
@@ -751,6 +447,97 @@ namespace SharePoint.IdentityService
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20001"), pattern, domain), EventLogEntryType.Error, 20001);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// FillResolve method implementation
+        /// </summary>
+        public ProxyResults FillResolve(string pattern, bool recursive)
+        {
+            try
+            {
+                using (SPMonitoredScope scp = new SPMonitoredScope("FillResolve"))
+                {
+                    Initialize();
+                    return DoSortAllResults(_wrappermanager.FillResolve(pattern, recursive));
+                }
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20002"), pattern), EventLogEntryType.Error, 20002);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// FillValidate method implementation
+        /// </summary>
+        public ProxyResults FillValidate(string pattern, bool recursive)
+        {
+            try
+            {
+                using (SPMonitoredScope scp = new SPMonitoredScope("FillValidate"))
+                {
+                    Initialize();
+                    return DoSortAllResults(_wrappermanager.FillValidate(pattern, recursive));
+                }
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20003"), pattern), EventLogEntryType.Error, 20003);
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// FillHierarchy method imlementation
+        /// </summary>
+        public ProxyDomain FillHierarchy(string hierarchyNodeID, int numberOfLevels)
+        {
+            try
+            {
+                using (SPMonitoredScope scp = new SPMonitoredScope("FillHierarchy"))
+                {
+                    Initialize();
+                    ProxyDomain prxy = _wrappermanager.FillHierarchy(hierarchyNodeID, numberOfLevels);
+                    if (prxy != null)
+                        prxy.Domains.Sort(new ProxyResultDomainsSort());
+                    return prxy;
+                }
+            }
+            catch (Exception E)
+            {
+                if (_wrappermanager != null)
+                {
+                    if (!string.IsNullOrEmpty(hierarchyNodeID))
+                        LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20004"), hierarchyNodeID), EventLogEntryType.Error, 20004);
+                    else
+                        LogEvent.Log(E, ResourcesValues.GetString("E20004B"), EventLogEntryType.Error, 20004);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// FillBadDomains method implementation
+        /// </summary>
+        public List<ProxyBadDomain> FillBadDomains()
+        {
+            try
+            {
+                using (SPMonitoredScope scp = new SPMonitoredScope("FillBadDomains"))
+                {
+                    Initialize();
+                    return _wrappermanager.FillBadDomains();
+                }
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, ResourcesValues.GetString("E20005"), EventLogEntryType.Error, 20005);
+                return null;
+            }
+
         }
 
         /// <summary>
@@ -820,50 +607,11 @@ namespace SharePoint.IdentityService
         /// </summary>
         private string GetFormattedUser(ProxyUser u)
         {
+            Initialize();
             if (this._claimmode == ProxyClaimsMode.Windows)
                 return u.SamAaccount;
             else
-                return string.Format("i:0e.t|{0}|{1}", this._trustedissuer, u.UserPrincipalName);
-        }
-
-        /// <summary>
-        /// FillResolve method implementation
-        /// </summary>
-        public ProxyResults FillResolve(string pattern, bool recursive)
-        {
-            try
-            {
-                using (SPMonitoredScope scp = new SPMonitoredScope("FillResolve"))
-                {
-                    Initialize();
-                    return DoSortAllResults(_wrapper.FillResolve(pattern, recursive));
-                }
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20002"), pattern), EventLogEntryType.Error, 20002);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// FillValidate method implementation
-        /// </summary>
-        public ProxyResults FillValidate(string pattern, bool recursive)
-        {
-            try
-            {
-                using (SPMonitoredScope scp = new SPMonitoredScope("FillValidate"))
-                {
-                    Initialize();
-                    return DoSortAllResults(_wrapper.FillValidate(pattern, recursive));
-                }
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20003"), pattern), EventLogEntryType.Error, 20003);
-                return null;
-            }
+                return string.Format("i:0e.t|{0}|{1}", _wrappermanager.Trustedissuer, u.UserPrincipalName);
         }
 
         /// <summary>
@@ -899,57 +647,6 @@ namespace SharePoint.IdentityService
             }
         }
 
-
-        /// <summary>
-        /// FillHierarchy method imlementation
-        /// </summary>
-        public ProxyDomain FillHierarchy(string hierarchyNodeID, int numberOfLevels)
-        {
-            try
-            {
-                using (SPMonitoredScope scp = new SPMonitoredScope("FillHierarchy"))
-                {
-                    Initialize();
-                    ProxyDomain prxy = _wrapper.FillHierarchy(hierarchyNodeID, numberOfLevels);
-                    if (prxy != null)
-                        prxy.Domains.Sort(new ProxyResultDomainsSort());
-                    return prxy;
-                }
-            }
-            catch (Exception E)
-            {
-                if (_wrapper != null)
-                {
-                    if (!string.IsNullOrEmpty(hierarchyNodeID))
-                        LogEvent.Log(E, string.Format(ResourcesValues.GetString("E20004"), hierarchyNodeID), EventLogEntryType.Error, 20004);
-                    else
-                        LogEvent.Log(E, ResourcesValues.GetString("E20004B"), EventLogEntryType.Error, 20004);
-                }
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// FillBadDomains method implementation
-        /// </summary>
-        public List<ProxyBadDomain> FillBadDomains()
-        {
-            try
-            {
-                using (SPMonitoredScope scp = new SPMonitoredScope("FillBadDomains"))
-                {
-                    Initialize();
-                    return _wrapper.FillBadDomains();
-                }
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, ResourcesValues.GetString("E20005"), EventLogEntryType.Error, 20005);
-                return null;
-            }
-
-        }
-
         /// <summary>
         /// FillAdditionalClaims method implementation
         /// </summary>
@@ -960,23 +657,7 @@ namespace SharePoint.IdentityService
                 using (SPMonitoredScope scp = new SPMonitoredScope("FillAdditionalClaims"))
                 {
                     Initialize();
-                    SPMapToWindows map = new SPMapToWindows();
-                    List<ProxyClaims> _map = map.GetWindowsMappedClaims(entity);
-                    if (_augmenter != null)
-                    {
-                        try
-                        {
-                            List<ProxyClaims> _tmp = _augmenter.FillAdditionalClaims(entity);
-                            if (_tmp != null)
-                                _map.AddRange(_tmp);
-                        }
-                        catch (Exception E)
-                        {
-
-                            LogEvent.Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
-                        }
-                    }
-                    return _map;
+                    return _wrappermanager.FillAdditionalClaims(entity);
                 }
             }
             catch (Exception E)
@@ -995,7 +676,8 @@ namespace SharePoint.IdentityService
             {
                 try
                 {
-                    DoInitialize(true);
+                    Initialize();
+                    _wrappermanager.Reload();
                     return true;
                 }
                 catch (Exception E)
@@ -1035,7 +717,8 @@ namespace SharePoint.IdentityService
             {
                 try
                 {
-                    DoInitialize(false);
+                    Initialize();
+                    _wrappermanager.LaunchStartCommand();
                 }
                 catch (Exception E)
                 {
@@ -1119,6 +802,23 @@ namespace SharePoint.IdentityService
                 SPSecurity.RunWithElevatedPrivileges(delegate()
                 {
                     res = Database.GetAssemblyConfiguration();
+                });
+                return res;
+            }
+        }
+
+        /// <summary>
+        /// GetAssemblyConfiguration method implementation
+        /// </summary>
+        public IEnumerable<AssemblyConfiguration> GetAssemblyConfigurations()
+        {
+            CheckFullControlAccess();
+            IEnumerable<AssemblyConfiguration> res = null;
+            using (SPMonitoredScope scp = new SPMonitoredScope("GetAssemblyConfigurations"))
+            {
+                SPSecurity.RunWithElevatedPrivileges(delegate ()
+                {
+                    res = Database.GetAssemblyConfigurations();
                 });
                 return res;
             }
@@ -1378,9 +1078,9 @@ namespace SharePoint.IdentityService
                                     result.ClaimProviderIdentityMode = ProxyClaimsIdentityMode.SAMAccount;
                                 else
                                 {
-                                    if (t.ParamValue.ToLower().Trim().Equals("email"))
+                                    if (t.ParamValue.ToLower().Trim().Equals("email")) 
                                         result.ClaimProviderIdentityMode = ProxyClaimsIdentityMode.Email;
-                                    else if (t.ParamValue.ToLower().Trim().Equals("samaccount"))
+                                    else if (t.ParamValue.ToLower().Trim().Equals("samaccount")) 
                                         result.ClaimProviderIdentityMode = ProxyClaimsIdentityMode.SAMAccount;
                                     else
                                         result.ClaimProviderIdentityMode = ProxyClaimsIdentityMode.UserPrincipalName;
@@ -1910,6 +1610,9 @@ namespace SharePoint.IdentityService
     #endregion
 
     #region SPMapToWindows internal class
+    /// <summary>
+    /// SMapToWindows Class
+    /// </summary>
     internal class SPMapToWindows
     {
         internal List<ProxyClaims> GetWindowsMappedClaims(string entity)
@@ -1940,6 +1643,9 @@ namespace SharePoint.IdentityService
     #endregion
 
     #region ClaimsAugmenter internal class
+    /// <summary>
+    /// ClaimsAugmenter class
+    /// </summary>
     public class ClaimsAugmenter : IIdentityServiceClaimsAugmenter
     {
         public List<ProxyClaims> FillAdditionalClaims(string entity)
@@ -1949,5 +1655,752 @@ namespace SharePoint.IdentityService
             return result;
         }
     }
+    #endregion
+
+    #region WrapperManager internal class
+    /// <summary>
+    /// Wrapper Manager
+    /// </summary>
+    internal class WrapperManager: IWrapperNoInit
+    {
+        private static object _lockobj = new Object();
+        private string _trustedissuer = string.Empty;
+        private bool _withimages = false;
+        private string _claimprovidername;
+        private string _cacheduration = "15";
+        private ProxyClaimsMode _claimmode = ProxyClaimsMode.Windows;
+        private IIdentityServiceClaimsAugmenter _augmenter = null;
+        private Type _typeaugmenter = null;
+
+        private List<ConnectorConfigurationWrapper> _assemblywrappers = null;
+        private IEnumerable<AssemblyConfiguration> _assemblyconfigs = null;
+        private List<ProxyFullConfiguration> _configs = null;
+        private List<ProxyGeneralParameter> _params = null;
+        private bool _isinitialized = false;
+        private ActiveDirectoryIdentityServiceDatabase _database;
+
+
+        public WrapperManager(ActiveDirectoryIdentityServiceDatabase db)
+        {
+            Database = db;
+        }
+
+        #region IWrapperNoInit
+        /// <summary>
+        /// ClaimsProviderName method implmentation
+        /// </summary>
+        public string ClaimsProviderName
+        {
+            get { return _claimprovidername; }
+            set { _claimprovidername = value; }
+        }
+
+        /// <summary>
+        /// Trustedissuer method implementation
+        /// </summary>
+        public string Trustedissuer
+        {
+            get { return _trustedissuer; }
+            set { _trustedissuer = value; }
+        }
+
+        /// <summary>
+        /// Database property implementation
+        /// </summary>
+        public ActiveDirectoryIdentityServiceDatabase Database
+        {
+            get { return _database; }
+            set { _database = value; }
+        }
+
+        /// <summary>
+        /// Assemblywrappers property implmentation
+        /// </summary>
+        internal List<ConnectorConfigurationWrapper> Assemblywrappers
+        {
+            get { return _assemblywrappers; }
+            set { _assemblywrappers = value; }
+        }
+
+        /// <summary>
+        /// Assemblyconfigs property implementation
+        /// </summary>
+        internal IEnumerable<AssemblyConfiguration> Assemblyconfigs
+        {
+            get { return _assemblyconfigs; }
+            set { _assemblyconfigs = value; }
+        }
+
+        /// <summary>
+        /// Configurations property implementation
+        /// </summary>
+        internal List<ProxyFullConfiguration> Configurations
+        {
+            get { return _configs; }
+            set { _configs = value; }
+        }
+
+        /// <summary>
+        /// GlobalParameters property implementation
+        /// </summary>
+        internal List<ProxyGeneralParameter> GlobalParameters
+        {
+            get { return _params; }
+            set { _params = value; }
+        }
+
+        /// <summary>
+        /// EnsureLoaded method implementation
+        /// </summary>
+        public void EnsureLoaded()
+        {
+            DoInitialize(false);
+        }
+
+        #region Fill methods
+        /// <summary>
+        /// FillSearch method implementation
+        /// </summary>
+        public ProxyResults FillSearch(string pattern, string domain, bool recursive)
+        {
+            ProxyResults result = null;
+            EnsureLoaded();
+            foreach (ConnectorConfigurationWrapper wr in Assemblywrappers)
+            {
+                ProxyResults res = wr.Wrapper.FillSearch(pattern, domain, recursive);
+                if (res != null)
+                {
+                    if (result == null)
+                        result = res;
+                    else
+                        result.Merge(res);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// FillResolve method implementation
+        /// </summary>
+        public ProxyResults FillResolve(string pattern, bool recursive)
+        {
+            ProxyResults result = null;
+            EnsureLoaded();
+            foreach (ConnectorConfigurationWrapper wr in Assemblywrappers)
+            {
+                ProxyResults res = wr.Wrapper.FillResolve(pattern, recursive);
+                if (res != null)
+                {
+                    if (result == null)
+                        result = res;
+                    else
+                        result.Merge(res);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// FillValidate method implementation
+        /// </summary>
+        public ProxyResults FillValidate(string pattern, bool recursive)
+        {
+            ProxyResults result = null;
+            EnsureLoaded();
+            foreach (ConnectorConfigurationWrapper wr in Assemblywrappers)
+            {
+                ProxyResults res = wr.Wrapper.FillValidate(pattern, recursive);
+                if (res != null)
+                {
+                    if (result == null)
+                        result = res;
+                    else
+                        result.Merge(res);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// FillHierarchy method implementation
+        /// </summary>
+        public ProxyDomain FillHierarchy(string hierarchyNodeID, int numberOfLevels)
+        {
+            ProxyDomain result = null;
+            EnsureLoaded();
+            foreach (ConnectorConfigurationWrapper wr in Assemblywrappers)
+            {
+                ProxyDomain res = wr.Wrapper.FillHierarchy(hierarchyNodeID, numberOfLevels);
+                if (res != null)
+                {
+                    if (result == null)
+                        result = res;
+                    else
+                        result.Merge(res);
+                }
+            }
+            return result;
+
+        }
+
+        /// <summary>
+        /// FillBadDomains method implementation
+        /// </summary>
+        /// <returns></returns>
+        public List<ProxyBadDomain> FillBadDomains()
+        {
+            List<ProxyBadDomain> result = null;
+            EnsureLoaded();
+            foreach (ConnectorConfigurationWrapper wr in Assemblywrappers)
+            {
+                List<ProxyBadDomain> res = wr.Wrapper.FillBadDomains();
+                if (res != null)
+                {
+                    if (result == null)
+                        result = res;
+                    else
+                        result.AddRange(res);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// FillAdditionalClaims method implementation
+        /// </summary>
+        public List<ProxyClaims> FillAdditionalClaims(string entity)
+        {
+            try
+            {
+                EnsureLoaded();
+                SPMapToWindows map = new SPMapToWindows();
+                List<ProxyClaims> _map = map.GetWindowsMappedClaims(entity);
+                if (_augmenter != null)
+                {
+                    try
+                    {
+                        List<ProxyClaims> _tmp = _augmenter.FillAdditionalClaims(entity);
+                        if (_tmp != null)
+                            _map.AddRange(_tmp);
+                    }
+                    catch (Exception E)
+                    {
+                        Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
+                    }
+                }
+                return _map;
+            }
+            catch (Exception E)
+            {
+                Log(E, ResourcesValues.GetString("E20008"), EventLogEntryType.Error, 20008);
+                return null;
+            }
+        }
+        #endregion
+
+        /// <summary>
+        /// Reload method implementation
+        /// </summary>
+        public void Reload()
+        {
+            DoInitialize(true);
+        }
+
+        public void LaunchStartCommand()
+        {
+            DoInitialize(false);
+        }
+
+        /// <summary>
+        /// Log method implementation
+        /// </summary>
+        public void Log(Exception ex, string message, EventLogEntryType eventLogEntryType, int eventid = 0)
+        {
+            LogEvent.Log(ex, message, eventLogEntryType, eventid);
+        }
+
+        /// <summary>
+        /// Trace method implementation
+        /// </summary>
+        public void Trace(string message, EventLogEntryType eventLogEntryType, int eventid = 0)
+        {
+            LogEvent.Trace(message, eventLogEntryType, eventid);
+        }
+        #endregion
+
+        #region Initialize methods
+        /// <summary>
+        /// Initialize method implementation
+        /// </summary>
+        private void Initialize()
+        {
+            if (!_isinitialized)
+            {
+                Assemblyconfigs = Database.GetAssemblyConfigurations();
+                GlobalParameters = GetGeneralParameters(Database.GetGeneralParameters());
+                Configurations = GetFullConfigurations(Database.GetFullConfigurations());
+                Assemblywrappers = new List<ConnectorConfigurationWrapper>();
+                _isinitialized = true;
+            }
+        }
+
+        /// <summary>
+        /// Reset method implementation
+        /// </summary>
+        private void Reset()
+        {
+            Assemblyconfigs = null;
+            GlobalParameters = null;
+            Configurations = null;
+            Assemblywrappers = null;
+            _isinitialized = false;
+        }
+
+        /// <summary>
+        /// Doinitialize method implementation
+        /// </summary>
+        /// <param name="reset"></param>
+        public void DoInitialize(bool reset = false)
+        {
+            lock (_lockobj)
+            {
+                if (reset)
+                    Reset();
+                if (_isinitialized)
+                    return;
+                using (SPMonitoredScope scp = new SPMonitoredScope("DoInitialize"))
+                {
+                    try
+                    {
+                        Initialize();
+                        try
+                        {
+                            Loadwrappers(); 
+                            LoadExtend();
+
+                            string val = Database.GetGeneralParameter("CacheDuration");
+                            if (string.IsNullOrEmpty(val))
+                                val = "15";
+                            ResetAccessCache(Convert.ToDouble(val));
+                            try
+                            {
+                                if (CheckInitializeAccess(val))
+                                    InitializeFromDatabase();
+                                else
+                                    InitializeFromCache();
+                            }
+                            catch (Exception E)
+                            {
+                                Database.ZapCache();
+                                throw E;
+                            }
+
+                        }
+                        catch (Exception E)
+                        {
+                            Database.ZapCache();
+                            throw E;
+                        }
+                    }
+                    catch (Exception E)
+                    {
+                        LogEvent.Log(E, E.Message, EventLogEntryType.Error, 20000);
+                        throw E;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// LoadWrappers method implementation
+        /// </summary>
+        public void Loadwrappers()
+        {
+            using (SPMonitoredScope scp = new SPMonitoredScope("LoadWrappers"))
+            {
+                foreach (AssemblyConfiguration ass in Assemblyconfigs)
+                {
+                    ConnectorConfigurationWrapper wrp = null;
+                    if (this.Assemblywrappers.Count>0)
+                       wrp = (from wrappers in this.Assemblywrappers where  wrappers.ConnectorID == ass.ID select wrappers).FirstOrDefault<ConnectorConfigurationWrapper>();
+
+                    if (wrp != null)
+                    {
+                        if (ass.Selected)
+                        {
+                            if (wrp.Wrapper == null)
+                            {
+                                Assembly assembly = Assembly.Load(ass.AssemblyFulldescription);
+                                Type typetoload = assembly.GetType(ass.AssemblyTypeDescription);
+                                object o = Activator.CreateInstance(typetoload);
+                                if (o != null)
+                                {
+                                    IWrapper _wrapper = o as IWrapper;
+                                    wrp = ass;
+                                    wrp.Wrapper = _wrapper;
+                                    SplitParameters(wrp.Wrapper, this.GlobalParameters);
+                                    wrp.Wrapper.Initialize(SplitFullConfigurations(this.Configurations, wrp.ConnectorID), this.GlobalParameters);
+                                    wrp.Wrapper.EnsureLoaded();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (ass.Selected)
+                        {
+                            Assembly assembly = Assembly.Load(ass.AssemblyFulldescription);
+                            Type typetoload = assembly.GetType(ass.AssemblyTypeDescription);
+                            object o = Activator.CreateInstance(typetoload);
+                            if (o != null)
+                            {
+                                ConnectorConfigurationWrapper newwrp = new ConnectorConfigurationWrapper(ass.ID, ass.AssemblyFulldescription, ass.AssemblyTypeDescription, ass.TraceResolve);
+                                IWrapper _wrapper = o as IWrapper;
+                                newwrp.Wrapper = _wrapper;
+                                SplitParameters(newwrp.Wrapper, this.GlobalParameters);
+                                newwrp.Wrapper.Initialize(SplitFullConfigurations(this.Configurations, newwrp.ConnectorID), this.GlobalParameters);
+                                newwrp.Wrapper.EnsureLoaded();
+                                Assemblywrappers.Add(newwrp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// LoadExtend method implementation
+        /// </summary>
+        public void LoadExtend()
+        {
+            try
+            {
+                AssemblyConfiguration cfg = Database.GetAssemblyAugmenter();
+                if (cfg != null)
+                {
+                    if (_typeaugmenter == null)
+                    {
+                        Assembly assembly = Assembly.Load(cfg.AssemblyFulldescription);
+                        _typeaugmenter = assembly.GetType(cfg.AssemblyTypeDescription);
+                        if (_typeaugmenter.IsClass && !_typeaugmenter.IsAbstract && _typeaugmenter.GetInterface("IIdentityServiceClaimsAugmenter") != null)
+                        {
+                            object o = Activator.CreateInstance(_typeaugmenter);
+                            if (o != null)
+                                _augmenter = o as IIdentityServiceClaimsAugmenter;
+                        }
+                        else
+                            _augmenter = null;
+                    }
+                    else
+                    {
+                        object o = Activator.CreateInstance(_typeaugmenter);
+                        if (o != null)
+                            _augmenter = o as IIdentityServiceClaimsAugmenter;
+                    }
+                }
+            }
+            catch
+            {
+                // Nothing, no errors, no claims augmentation
+            }
+        }
+
+        /// <summary>
+        /// InitializeFromDatabase method implementation
+        /// </summary>
+        private void InitializeFromDatabase()
+        {
+            string key = GetSharePointCertificate();
+            Initialize();
+            EnsureLoaded();
+
+            foreach (ConnectorConfigurationWrapper cfg in Assemblywrappers)
+            {
+                IWrapperCaching cch = cfg.Wrapper as IWrapperCaching;
+                if (cch != null)
+                {
+                    XmlDocument res = cch.Save();
+                    string data = PasswordEncrypt(res.OuterXml, key);
+                    Database.SetDataToCache(data);
+                }
+            }
+            Database.ClearAccessToCache();
+        }
+
+        /// <summary>
+        /// InitializeFromCache method implementation
+        /// </summary>
+        private void InitializeFromCache()
+        {
+            string key = GetSharePointCertificate();
+            string cdata = Database.GetDataFromCache();
+            string data = PasswordDecrypt(cdata, key);
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(data);
+
+            foreach (ConnectorConfigurationWrapper cfg in Assemblywrappers)
+            {
+                IWrapperCaching cch = cfg.Wrapper as IWrapperCaching;
+                if (cch != null)
+                    cch.Restore(doc);
+            }
+        }
+
+        /// <summary>
+        /// SplitFullConfigurations method implementation
+        /// </summary>
+        private List<ProxyFullConfiguration> SplitFullConfigurations(List<ProxyFullConfiguration> src, long connector)
+        {
+            List<ProxyFullConfiguration> result = (from s in src where s.ConnectorID == connector select s).ToList<ProxyFullConfiguration>();
+            return result;
+        }
+
+        /// <summary>
+        /// SplitParameters method implementation
+        /// </summary>
+        private void SplitParameters(IWrapper wr, List<ProxyGeneralParameter> src)
+        {
+            if (wr == null)
+                return;
+            ProxyGeneralParameter  result = (from s in src where s.ParamName.ToLower() == "claimdisplayname" select s).First<ProxyGeneralParameter>();
+            if (result!=null)
+                wr.ClaimsProviderName = result.ParamValue;
+        }
+
+        /// <summary>
+        /// GetFullConfigurations method implementation
+        /// </summary>
+        private List<ProxyFullConfiguration> GetFullConfigurations(IEnumerable<FullConfiguration> src)
+        {
+            string key = GetSharePointCertificate();
+            List<ProxyFullConfiguration> prxy = new List<ProxyFullConfiguration>();
+            foreach (FullConfiguration c in src)
+            {
+                ProxyFullConfiguration p = new ProxyFullConfiguration();
+                p.DisplayName = c.DisplayName;
+                p.DnsName = c.DnsName;
+                p.Enabled = c.Enabled;
+                p.Maxrows = c.Maxrows;
+                p.DisplayPosition = c.DisplayPosition;
+                p.ConnectString = c.ConnectString;
+                p.ConnectorID = c.ConnectorID;
+                try
+                {
+                    p.Password = PasswordDecrypt(c.Password, key);
+                }
+                catch (SharePointIdentityCryptographicException)
+                {
+                    p.Password = c.Password;
+                    ConnectionConfiguration xcfg = new ConnectionConfiguration();
+                    xcfg.ConnectionName = c.Connection;
+                    xcfg.Username = c.UserName;
+                    xcfg.Password = PasswordEncrypt(c.Password, key);
+                    xcfg.Timeout = c.Timeout;
+                    xcfg.Secure = c.Secure;
+                    xcfg.Maxrows = c.Maxrows;
+                    xcfg.ConnectString = c.ConnectString;
+                    xcfg.ConnectorID = c.ConnectorID;
+                    Database.SetConnectionConfiguration(null, xcfg); // do insert
+                }
+                p.Secure = c.Secure;
+                p.Timeout = c.Timeout;
+                p.UserName = c.UserName;
+                p.IsDefault = c.Connection.ToLower().Trim().Equals("default");
+                prxy.Add(p);
+            }
+            return prxy;
+        }
+
+        /// <summary>
+        /// GetGeneralParameters
+        /// </summary>
+        private List<ProxyGeneralParameter> GetGeneralParameters(IEnumerable<GeneralParameter> src)
+        {
+            List<ProxyGeneralParameter> glb = new List<ProxyGeneralParameter>();
+            foreach (GeneralParameter t in src)
+            {
+                ProxyGeneralParameter x = new ProxyGeneralParameter();
+                x.ParamName = t.ParamName;
+                x.ParamValue = t.ParamValue;
+                glb.Add(x);
+                if (t.ParamName.ToLower().Equals("claimdisplayname"))
+                    ClaimsProviderName = t.ParamValue;
+                if (t.ParamName.ToLower().Equals("peoplepickerimages"))
+                    this._withimages = bool.Parse(t.ParamValue);
+                if (t.ParamName.ToLower().Equals("trustedloginprovidername"))
+                    this.Trustedissuer = t.ParamValue;
+                if (t.ParamName.ToLower().Equals("claimsmode"))
+                    this._claimmode = (ProxyClaimsMode)Enum.Parse(typeof(ProxyClaimsMode), t.ParamValue);
+                if (t.ParamName.ToLower().Equals("cacheduration"))
+                {
+                    this._cacheduration = t.ParamValue;
+                    if (string.IsNullOrEmpty(this._cacheduration))
+                        this._cacheduration = "15";
+                    ResetAccessCache(Convert.ToDouble(this._cacheduration));
+                }
+            }
+            return glb;
+        }
+        #endregion
+
+        /// <summary>
+        /// GetSharePointCertificate method implementation
+        /// </summary>
+        private string GetSharePointCertificate()
+        {
+            const string errorstr = "Cannot Access to SharePoint Certificate Store, Process cannot continue";
+            string key = null;
+            try
+            {
+                key = IdentityServiceCertificate.GetSharePointCertificate();
+                if (string.IsNullOrEmpty(key))
+                    throw new Exception(errorstr);
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                throw E;
+            }
+            return key;
+        }
+
+        /// <summary>
+        /// PasswordDecrypt method implementation
+        /// </summary>
+        private string PasswordDecrypt(string cdata, string key)
+        {
+            const string errorstr = "Cannot decrypt password, Process cannot continue";
+            string data = null;
+            try
+            {
+                data = PasswordManager.Decrypt(cdata, key);
+                if (string.IsNullOrEmpty(data))
+                    throw new Exception(errorstr);
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                throw E;
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// PasswordEncrypt method implementation
+        /// </summary>
+        private string PasswordEncrypt(string cdata, string key)
+        {
+            const string errorstr = "Cannot encrypt password, Process cannot continue";
+            string data = null;
+            try
+            {
+                data = PasswordManager.Encrypt(cdata, key);
+                if (string.IsNullOrEmpty(data))
+                    throw new Exception(errorstr);
+            }
+            catch (Exception E)
+            {
+                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
+                throw E;
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// CheckInitializeAccess method implmentation
+        /// </summary>
+        private bool CheckInitializeAccess(string val)
+        {
+            if (val.ToLowerInvariant().Equals("0"))
+            {
+                return true;
+            }
+
+            bool trueload = true;
+            bool canaccess = false;
+            do
+            {
+                canaccess = Database.GetAccessTocache(out trueload);
+                if (!canaccess)
+                    Thread.Sleep(1000);
+            }
+            while (!canaccess);
+            return trueload;
+        }
+
+        /// <summary>
+        /// ResetAccessCache method implementation
+        /// </summary>
+        private void ResetAccessCache(double minutes)
+        {
+            Database.ResetAccessCache(minutes);
+        }
+    }
+    #endregion
+
+    #region ConfigurationWrapper internal class
+    /// <summary>
+    /// ConnectorConfigurationWrapper Class
+    /// </summary>
+    internal class ConnectorConfigurationWrapper
+    {
+        private IWrapper _wrapper = null;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ConnectorConfigurationWrapper()
+        {
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ConnectorConfigurationWrapper(Int64 connector, string assemblydesc, string typedesc, bool trace = false)
+        {
+            this.ConnectorID = connector;
+            this.AssemblyFulldescription = assemblydesc;
+            this.AssemblyTypeDescription = typedesc;
+            this.TraceResolve = trace;
+        }
+
+        /// <summary>
+        /// AssemblyConfigurationWrapper implict operator
+        /// </summary>
+        public static implicit operator ConnectorConfigurationWrapper(AssemblyConfiguration config)
+        {
+            return new ConnectorConfigurationWrapper(config.ID, config.AssemblyFulldescription, config.AssemblyTypeDescription, config.TraceResolve);
+        }
+
+        /// <summary>
+        /// AssemblyFulldescription method implementation
+        /// </summary>
+        public string AssemblyFulldescription { get; set; }
+
+        /// <summary>
+        /// AssemblyTypeDescription method implementation
+        /// </summary>
+        public string AssemblyTypeDescription { get; set; }
+
+        /// <summary>
+        /// TraceResolve method implementation
+        /// </summary>
+        public bool TraceResolve { get; set; }
+
+        /// <summary>
+        /// TraceResolve method implementation
+        /// </summary>
+        public Int64 ConnectorID { get; set; }
+
+        /// <summary>
+        /// Wrapper property implementation
+        /// </summary>
+        public IWrapper Wrapper
+        {
+            get { return _wrapper; }
+            set { _wrapper = value; }
+        }
+    }   
     #endregion
 }

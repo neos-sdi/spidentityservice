@@ -33,6 +33,21 @@ SharePoint Identity Services
                             <Template_Control>
                                 <SharePoint:SPGridView ID="Grid" AllowPaging="True" PageSize="7" AutoGenerateColumns="false" runat="server" DataSourceID="ServiceDataSource" ShowFooter="true" OnRowCommand="Grid_RowCommand" OnRowDataBound="Grid_RowDataBound" OnRowUpdating="Grid_RowUpdating" OnPageIndexChanging="Grid_PageIndexChanging" FooterStyle-VerticalAlign="Top" DataKeyNames="AssemblyFulldescription, AssemblyTypeDescription">
                                     <Columns>
+                                        <asp:TemplateField HeaderText="Connector ID" ControlStyle-Width="50px">
+                                            <EditItemTemplate>
+                                                <asp:TextBox ID="txtConnectorID" runat="server" Text='<%# Bind("ConnectorID") %>' ValidationGroup="B"></asp:TextBox>
+                                                <asp:RequiredFieldValidator ID="ReqConnectorID" runat="server" ErrorMessage='<%# GetUIString("DLLVALIDATORASSEMBLYMESSAGE") %>' ControlToValidate="txtConnectorID" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" ValidationGroup="B" ></asp:RequiredFieldValidator>
+                                            </EditItemTemplate>
+                                            <ItemTemplate>
+                                                <asp:TextBox ID="lblConnectorID" runat="server" Text='<%# Bind("ConnectorID") %>' BorderStyle="None" Enabled="false" ValidationGroup="B"></asp:TextBox>
+                                            </ItemTemplate>
+                                            <FooterTemplate>
+                                                <br />
+                                                <asp:TextBox ID="newConnectorID" runat="server" Width="50px" ValidationGroup="A"></asp:TextBox>
+                                                <asp:RequiredFieldValidator ID="valConnectorID" runat="server" ErrorMessage='<%# GetUIString("DLLVALIDATORASSEMBLYMESSAGE") %>' ControlToValidate="newConnectorID" SetFocusOnError="True" Display="Dynamic" ForeColor="Red" ValidationGroup="A" ></asp:RequiredFieldValidator>
+                                            </FooterTemplate>
+                                        </asp:TemplateField>
+
                                         <asp:TemplateField HeaderText="Assembly" ControlStyle-Width="400px">
                                             <EditItemTemplate>
                                                 <asp:TextBox ID="txtAssemblyFulldescription" runat="server" Text='<%# Bind("AssemblyFulldescription") %>' ValidationGroup="B"></asp:TextBox>

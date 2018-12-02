@@ -73,6 +73,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                     e.Handled = false;
                     SPUtility.HandleAccessDenied(new UnauthorizedAccessException("You are not authorized to access this page."));
                 }
+                string connectorid = ((TextBox)Grid.FooterRow.FindControl("newConnectorID")).Text;
                 string assembly = ((TextBox)Grid.FooterRow.FindControl("newAssemblyFulldescription")).Text;
                 string comptype = ((TextBox)Grid.FooterRow.FindControl("newAssemblyTypeDescription")).Text;
                 bool selected = ((CheckBox)Grid.FooterRow.FindControl("cbnSelected")).Checked;
@@ -84,6 +85,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                     ObjectDataSourceView odsView = (ObjectDataSourceView)odsSrc.GetView("DefaultView");
 
                     OrderedDictionary dict = new OrderedDictionary();
+                    dict.Add("ConnectorID", connectorid);
                     dict.Add("AssemblyFulldescription", assembly);
                     dict.Add("AssemblyTypeDescription", comptype);
                     dict.Add("Selected", selected);
@@ -112,6 +114,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// </summary>
         protected void Grid_RowUpdating(object sender, GridViewUpdateEventArgs e)
         {
+            string connectorid = ((TextBox)Grid.Rows[e.RowIndex].FindControl("txtConnectorID")).Text;
             string assembly = ((TextBox)Grid.Rows[e.RowIndex].FindControl("txtAssemblyFulldescription")).Text;
             string comptype = ((TextBox)Grid.Rows[e.RowIndex].FindControl("txtAssemblyTypeDescription")).Text;
             bool selected = ((CheckBox)Grid.Rows[e.RowIndex].FindControl("cbaSelected")).Checked;
@@ -256,8 +259,9 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// <summary>
         /// Constructor
         /// </summary>
-        public AssemblyConfigurationWrapper(string assemblydesc, string typedesc, bool selected = false, bool trace = false, bool augment = false)
+        public AssemblyConfigurationWrapper(Int64 id, string assemblydesc, string typedesc, bool selected = false, bool trace = false, bool augment = false)
         {
+            this.ConnectorID = id;
             this.AssemblyFulldescription = assemblydesc;
             this.AssemblyTypeDescription = typedesc;
             this.Selected = selected;
@@ -270,6 +274,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         public bool Selected { get; set; }
         public bool TraceResolve { get; set; }
         public bool ClaimsExt { get; set; }
+        public Int64 ConnectorID { get; set; }
         public IdentityServiceApplication ServiceApplication { get; set; }
 
         /// <summary>
@@ -281,7 +286,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
             List<AssemblyConfiguration> src = serviceapplication.GetAssemblyConfigurationList().ToList<AssemblyConfiguration>();
             foreach (AssemblyConfiguration ass in src)
             {
-                lst.Add(new AssemblyConfigurationWrapper(ass.AssemblyFulldescription, ass.AssemblyTypeDescription, ass.Selected, ass.TraceResolve, ass.ClaimsExt));
+                lst.Add(new AssemblyConfigurationWrapper(ass.ID, ass.AssemblyFulldescription, ass.AssemblyTypeDescription, ass.Selected, ass.TraceResolve, ass.ClaimsExt));
             }
             if (lst.Count == 0)
                 lst.Add(new AssemblyConfigurationWrapper());
@@ -293,22 +298,22 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// </summary>
         public static void Update(AssemblyConfigurationWrapper values, AssemblyConfigurationWrapper __values)
         {
-            __values.ServiceApplication.SetAssemblyConfiguration(new AssemblyConfiguration(__values.AssemblyFulldescription, __values.AssemblyTypeDescription, __values.Selected, __values.TraceResolve, __values.ClaimsExt), 
-                                                                 new AssemblyConfiguration(values.AssemblyFulldescription, values.AssemblyTypeDescription, values.Selected, values.TraceResolve, values.ClaimsExt));
+            __values.ServiceApplication.SetAssemblyConfiguration(new AssemblyConfiguration(__values.ConnectorID, __values.AssemblyFulldescription, __values.AssemblyTypeDescription, __values.Selected, __values.TraceResolve, __values.ClaimsExt), 
+                                                                 new AssemblyConfiguration(values.ConnectorID, values.AssemblyFulldescription, values.AssemblyTypeDescription, values.Selected, values.TraceResolve, values.ClaimsExt));
         }
 
         /// Insert method implementation
         /// </summary>
         public static void Insert(AssemblyConfigurationWrapper values)
         {
-            values.ServiceApplication.SetAssemblyConfiguration(null, new AssemblyConfiguration(values.AssemblyFulldescription, values.AssemblyTypeDescription, values.Selected, values.TraceResolve, values.ClaimsExt));
+            values.ServiceApplication.SetAssemblyConfiguration(null, new AssemblyConfiguration(values.ConnectorID, values.AssemblyFulldescription, values.AssemblyTypeDescription, values.Selected, values.TraceResolve, values.ClaimsExt));
         }
 
         /// Delete method implementation
         /// </summary>
         public static void Delete(AssemblyConfigurationWrapper __values)
         {
-            __values.ServiceApplication.DeleteAssemblyConfiguration(new AssemblyConfiguration(__values.AssemblyFulldescription, __values.AssemblyTypeDescription, __values.Selected, __values.TraceResolve, __values.ClaimsExt));
+            __values.ServiceApplication.DeleteAssemblyConfiguration(new AssemblyConfiguration(__values.ConnectorID, __values.AssemblyFulldescription, __values.AssemblyTypeDescription, __values.Selected, __values.TraceResolve, __values.ClaimsExt));
             __values = null;
         }
     }

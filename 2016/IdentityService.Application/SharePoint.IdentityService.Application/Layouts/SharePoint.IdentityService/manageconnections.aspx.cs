@@ -68,6 +68,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         {
             if (e.CommandName == "New")
             {
+                string connectionid = ((TextBox)Grid.FooterRow.FindControl("newConnectorID")).Text;
                 string connectionname = ((TextBox)Grid.FooterRow.FindControl("newConnectionName")).Text;
                 string username = ((TextBox)Grid.FooterRow.FindControl("newUserName")).Text;
                 string password = ((TextBox)Grid.FooterRow.FindControl("newPassword")).Text;
@@ -80,6 +81,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                 ObjectDataSourceView odsView = (ObjectDataSourceView)odsSrc.GetView("DefaultView");
 
                 OrderedDictionary dict = new OrderedDictionary();
+                dict.Add("ConnectorID", connectionid);
                 dict.Add("ConnectionName", connectionname);
                 dict.Add("Username", username);
                 dict.Add("Password",password);
@@ -190,8 +192,9 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// <summary>
         /// Constructor
         /// </summary>
-        public ConnectionConfigurationWrapper(string connectionname, string username, string password, Int16 timeout, bool secure, int maxrows, string connectstring)
+        public ConnectionConfigurationWrapper(Int64 id, string connectionname, string username, string password, Int16 timeout, bool secure, int maxrows, string connectstring)
         {
+            this.ConnectorID = id;
             this.ConnectionName = connectionname;
             this.Username = username;
             this.Password = password;
@@ -208,6 +211,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         public bool Secure { get; set; }
         public int Maxrows { get; set; }
         public string ConnectString { get; set; }
+        public Int64 ConnectorID { get; set; }
         public IdentityServiceApplication ServiceApplication { get; set; }
 
         /// <summary>
@@ -219,7 +223,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
             List<ConnectionConfiguration> src = serviceapplication.GetConnectionConfigurationList().ToList<ConnectionConfiguration>();
             foreach (ConnectionConfiguration dom in src)
             {
-                lst.Add(new ConnectionConfigurationWrapper(dom.ConnectionName, dom.Username, dom.Password, dom.Timeout, dom.Secure, dom.Maxrows, dom.ConnectString));
+                lst.Add(new ConnectionConfigurationWrapper(dom.ConnectorID, dom.ConnectionName, dom.Username, dom.Password, dom.Timeout, dom.Secure, dom.Maxrows, dom.ConnectString));
             }
             if (lst.Count == 0)
                 lst.Add(new ConnectionConfigurationWrapper());
@@ -231,22 +235,22 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// </summary>
         public static void Update(ConnectionConfigurationWrapper values, ConnectionConfigurationWrapper __values)
         {
-            __values.ServiceApplication.SetConnectionConfiguration(new ConnectionConfiguration(__values.ConnectionName, __values.Username, __values.Password, __values.Timeout, __values.Secure, __values.Maxrows, __values.ConnectString),
-                                                                   new ConnectionConfiguration(values.ConnectionName, values.Username, values.Password, values.Timeout, values.Secure, values.Maxrows, values.ConnectString));
+            __values.ServiceApplication.SetConnectionConfiguration(new ConnectionConfiguration(__values.ConnectionName, __values.Username, __values.Password, __values.Timeout, __values.Secure, __values.Maxrows, __values.ConnectString, __values.ConnectorID),
+                                                                   new ConnectionConfiguration(values.ConnectionName, values.Username, values.Password, values.Timeout, values.Secure, values.Maxrows, values.ConnectString, values.ConnectorID));
         }
 
         /// Insert method implementation
         /// </summary>
         public static void Insert(ConnectionConfigurationWrapper values)
         {
-            values.ServiceApplication.SetConnectionConfiguration(null, new ConnectionConfiguration(values.ConnectionName, values.Username, values.Password, values.Timeout, values.Secure, values.Maxrows, values.ConnectString));
+            values.ServiceApplication.SetConnectionConfiguration(null, new ConnectionConfiguration(values.ConnectionName, values.Username, values.Password, values.Timeout, values.Secure, values.Maxrows, values.ConnectString, values.ConnectorID));
         }
 
         /// Delete method implementation
         /// </summary>
         public static void Delete(ConnectionConfigurationWrapper __values)
         {
-            __values.ServiceApplication.DeleteConnectionConfiguration(new ConnectionConfiguration(__values.ConnectionName, __values.Username, __values.Password, __values.Timeout, __values.Secure, __values.Maxrows, __values.ConnectString));
+            __values.ServiceApplication.DeleteConnectionConfiguration(new ConnectionConfiguration(__values.ConnectionName, __values.Username, __values.Password, __values.Timeout, __values.Secure, __values.Maxrows, __values.ConnectString, __values.ConnectorID));
             __values = null;
         }
     }

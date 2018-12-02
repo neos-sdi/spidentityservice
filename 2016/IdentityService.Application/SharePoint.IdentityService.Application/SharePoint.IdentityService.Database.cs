@@ -224,7 +224,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration ORDER BY AssemblyFulldescription";
+                string qry = "SELECT ID, AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration ORDER BY AssemblyFulldescription";
                 cnx.Open();
                 return cnx.Query<AssemblyConfiguration>(qry, null);
             } 
@@ -237,10 +237,23 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration WHERE Selected=1 AND ClaimsExt=0";
+                string qry = "SELECT ID, AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration WHERE Selected=1 AND ClaimsExt=0";
                 cnx.Open();
                 return cnx.Query<AssemblyConfiguration>(qry, null).First();
             }                
+        }
+
+        /// <summary>
+        /// GetAssemblyConfigurations method implementation
+        /// </summary>
+        public IEnumerable<AssemblyConfiguration> GetAssemblyConfigurations()
+        {
+            using (var cnx = new SqlConnection(ConnectString()))
+            {
+                string qry = "SELECT ID, AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration WHERE Selected=1 AND ClaimsExt=0";
+                cnx.Open();
+                return cnx.Query<AssemblyConfiguration>(qry, null);
+            }
         }
 
         /// <summary>
@@ -250,7 +263,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration WHERE Selected=1 AND ClaimsExt=1";
+                string qry = "SELECT ID, AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt FROM dbo.AssemblyConfiguration WHERE Selected=1 AND ClaimsExt=1";
                 cnx.Open();
                 return cnx.Query<AssemblyConfiguration>(qry, null).First();
             }
@@ -263,19 +276,19 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string upd = "UPDATE dbo.AssemblyConfiguration SET AssemblyFulldescription = @AssemblyFulldescription, AssemblyTypeDescription = @AssemblyTypeDescription, TraceResolve = @TraceResolve, Selected = @Selected, ClaimsExt=@ClaimsExt WHERE AssemblyFulldescription = @OldAssemblyFulldescription AND AssemblyTypeDescription = @OldAssemblyTypeDescription";
+                string upd = "UPDATE dbo.AssemblyConfiguration SET AssemblyFulldescription = @AssemblyFulldescription, AssemblyTypeDescription = @AssemblyTypeDescription, TraceResolve = @TraceResolve, Selected = @Selected, ClaimsExt=@ClaimsExt WHERE ID = @ID";
                 string ins = "INSERT INTO dbo.AssemblyConfiguration (AssemblyFulldescription, AssemblyTypeDescription, TraceResolve, Selected, ClaimsExt) VALUES (@AssemblyFulldescription, @AssemblyTypeDescription, @TraceResolve, @Selected, @ClaimsExt)";
                 cnx.Open();
                 if (cfg != null)  // Update
                 {
-                    if (cnx.Execute(upd, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt, OldAssemblyFulldescription = cfg.AssemblyFulldescription, OldAssemblyTypeDescription = cfg.AssemblyTypeDescription }) >= 1)
+                    if (cnx.Execute(upd, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt, ID = cfg.ID }) >= 1)
                         return true;
                     else  // do insert not probable
                         return (cnx.Execute(ins, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt }) == 1);
                 }
                 else // Insert
                 {
-                    if (cnx.Execute(upd, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt, OldAssemblyFulldescription = newcfg.AssemblyFulldescription, OldAssemblyTypeDescription = newcfg.AssemblyTypeDescription }) >= 1)
+                    if (cnx.Execute(upd, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt, ID = newcfg.ID }) >= 1)
                         return true;
                     else // do insert
                         return (cnx.Execute(ins, new { AssemblyFulldescription = newcfg.AssemblyFulldescription, AssemblyTypeDescription = newcfg.AssemblyTypeDescription, TraceResolve = newcfg.TraceResolve, Selected = newcfg.Selected, ClaimsExt = newcfg.ClaimsExt }) == 1);
@@ -290,9 +303,9 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string del = "DELETE FROM dbo.AssemblyConfiguration WHERE AssemblyFulldescription = @AssemblyFulldescription AND AssemblyTypeDescription = @AssemblyTypeDescription";
+                string del = "DELETE FROM dbo.AssemblyConfiguration WHERE ID = @ID";
                 cnx.Open();
-                if (cnx.Execute(del, new { AssemblyFulldescription = cfg.AssemblyFulldescription, AssemblyTypeDescription = cfg.AssemblyTypeDescription }) >= 1)
+                if (cnx.Execute(del, new { ID = cfg.ID }) >= 1)
                     return true;
                 else
                     return false;
@@ -308,7 +321,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString FROM dbo.ConnectionConfiguration ORDER BY ConnectionName";
+                string qry = "SELECT ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString, ConnectorID FROM dbo.ConnectionConfiguration ORDER BY ConnectionName";
                 cnx.Open();
                 return cnx.Query<ConnectionConfiguration>(qry, null);
             }
@@ -320,7 +333,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString FROM dbo.ConnectionConfiguration WHERE ConnectionName=@ConnectionName";
+                string qry = "SELECT ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString, ConnectorID FROM dbo.ConnectionConfiguration WHERE ConnectionName=@ConnectionName";
                 cnx.Open();
                 return cnx.Query<ConnectionConfiguration>(qry, new { ConnectionName = name } ).First();
             }
@@ -333,23 +346,23 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string upd = "UPDATE dbo.ConnectionConfiguration SET UserName=@UserName, Password=@Password, Timeout=@Timeout, Secure=@Secure, Maxrows=@Maxrows, ConnectString=@ConnectString WHERE ConnectionName=@ConnectionName";
-                string ins = "INSERT INTO dbo.ConnectionConfiguration (ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString) VALUES (@ConnectionName, @UserName, @Password, @Timeout, @Secure, @Maxrows, @ConnectString)";
+                string upd = "UPDATE dbo.ConnectionConfiguration SET UserName=@UserName, Password=@Password, Timeout=@Timeout, Secure=@Secure, Maxrows=@Maxrows, ConnectString=@ConnectString, ConnectorID=@ConnectorID WHERE ConnectionName=@ConnectionName";
+                string ins = "INSERT INTO dbo.ConnectionConfiguration (ConnectionName, UserName, Password, Timeout, Secure, Maxrows, ConnectString, ConnectorID) VALUES (@ConnectionName, @UserName, @Password, @Timeout, @Secure, @Maxrows, @ConnectString, @ConnectorID)";
 
                 cnx.Open();
                 if (cfg != null)  // Update
                 {
-                    if (cnx.Execute(upd, new { UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectionName = cfg.ConnectionName }) >= 1)
+                    if (cnx.Execute(upd, new { UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectorID = newcfg.ConnectorID, ConnectionName = cfg.ConnectionName }) >= 1)
                         return true;
                     else  // do insert not probable
-                        return (cnx.Execute(ins, new { ConnectionName = newcfg.ConnectionName, UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString }) == 1);
+                        return (cnx.Execute(ins, new { ConnectionName = newcfg.ConnectionName, UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectorID = newcfg.ConnectorID }) == 1);
                 }
                 else // Insert
                 {
-                    if (cnx.Execute(upd, new { UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectionName = newcfg.ConnectionName }) >= 1)
+                    if (cnx.Execute(upd, new { UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectorID = newcfg.ConnectorID, ConnectionName = newcfg.ConnectionName }) >= 1)
                         return true;
                     else // do insert
-                        return (cnx.Execute(ins, new { ConnectionName = newcfg.ConnectionName, UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString }) == 1);
+                        return (cnx.Execute(ins, new { ConnectionName = newcfg.ConnectionName, UserName = newcfg.Username, Password = newcfg.Password, Timeout = newcfg.Timeout, Secure = newcfg.Secure, Maxrows = newcfg.Maxrows, ConnectString = newcfg.ConnectString, ConnectorID = newcfg.ConnectorID }) == 1);
                 }
             }
         }
@@ -456,7 +469,7 @@ namespace SharePoint.IdentityService
         {
             using (var cnx = new SqlConnection(ConnectString()))
             {
-                string qry = "SELECT a.DnsName, a.DisplayName, a.Enabled, a.Connection, a.DisplayPosition, b.UserName, b.Password, b.Timeout, b.Secure, b.Maxrows, b.ConnectString FROM dbo.DomainConfiguration a inner join dbo.ConnectionConfiguration b on a.Connection = b.ConnectionName where a.Enabled=1";
+                string qry = "SELECT a.DnsName, a.DisplayName, a.Enabled, a.Connection, a.DisplayPosition, b.UserName, b.Password, b.Timeout, b.Secure, b.Maxrows, b.ConnectString, b.ConnectorID FROM dbo.DomainConfiguration a inner join dbo.ConnectionConfiguration b on a.Connection = b.ConnectionName where a.Enabled=1";
                 cnx.Open();
                 return cnx.Query<FullConfiguration>(qry, null);
             }
@@ -754,7 +767,7 @@ namespace SharePoint.IdentityService
         /// Constructor
         /// </summary>
         public GlobalParameter(int cacheduration, ProxyClaimsDisplayMode claimsdisplaymode, string claimdisplayname, ProxyClaimsIdentityMode claimidentitymode, string claimidentity, string claimprovidername, 
-                               ProxyClaimsRoleMode claimrolemode, string claimrole, ProxyClaimsMode claimsmode, ProxyClaimsDisplayMode peoplepickerdisplaymode, bool supportsuserkey, bool peoplepickerimages, bool searchbydisplayname,
+                               ProxyClaimsRoleMode claimrolemode, string claimrole, ProxyClaimsMode claimsmode, ProxyClaimsDisplayMode peoplepickerdisplaymode, bool peoplepickerimages, bool supportsuserkey, bool searchbydisplayname,
                                bool searchbymail, bool showsystemnodes, ProxySmoothRequest smoothrequestor, string trustedloginprovidername)
         {
             this.CacheDuration = cacheduration;
@@ -789,10 +802,10 @@ namespace SharePoint.IdentityService
         public bool PeoplePickerImages { get; set; }
         public bool SearchByDisplayName { get; set; }
         public bool SearchByMail { get; set; }
-        public bool SupportsUserKey { get; set; }
         public bool ShowSystemNodes { get; set; }
         public ProxySmoothRequest SmoothRequestor { get; set; }
         public string TrustedLoginProviderName { get; set; }
+        public bool SupportsUserKey { get; set; }
     }
 
     /// <summary>
@@ -810,8 +823,9 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// Constructor
         /// </summary>
-        public AssemblyConfiguration(string assemblydesc, string typedesc, bool selected = false, bool trace = false, bool augment = false)
+        public AssemblyConfiguration(Int64 id, string assemblydesc, string typedesc, bool selected = false, bool trace = false, bool augment = false)
         {
+            this.ID = id;
             this.AssemblyFulldescription = assemblydesc;
             this.AssemblyTypeDescription = typedesc;
             this.Selected = selected;
@@ -819,6 +833,7 @@ namespace SharePoint.IdentityService
             this.ClaimsExt = augment;
         }
 
+        public Int64 ID { get; set; }
         public string AssemblyFulldescription { get; set; }
         public string AssemblyTypeDescription { get; set; }
         public bool Selected { get; set; }
@@ -842,6 +857,7 @@ namespace SharePoint.IdentityService
         public bool Secure { get; set; }
         public int Maxrows { get; set; }
         public string ConnectString { get; set; }
+        public Int64 ConnectorID { get; set; }
     }
 
     /// <summary>
@@ -859,7 +875,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// Constructor
         /// </summary>
-        public ConnectionConfiguration(string connectionname, string username, string password, Int16 timeout, bool secure, int maxrows, string connectstring)
+        public ConnectionConfiguration(string connectionname, string username, string password, Int16 timeout, bool secure, int maxrows, string connectstring, Int64 connector)
         {
             this.ConnectionName = connectionname;
             this.Username = username;
@@ -868,6 +884,7 @@ namespace SharePoint.IdentityService
             this.Secure = secure;
             this.Maxrows = maxrows;
             this.ConnectString = connectstring;
+            this.ConnectorID = connector;
         }
 
         public string ConnectionName { get; set; }
@@ -877,6 +894,7 @@ namespace SharePoint.IdentityService
         public bool Secure { get; set; }
         public int Maxrows { get; set; }
         public string ConnectString { get; set; }
+        public Int64 ConnectorID { get; set; }
     }
 
     /// <summary>

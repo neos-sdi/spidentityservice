@@ -72,12 +72,12 @@ namespace SharePoint.IdentityService
         {
             if (m_proxy == null)
             {
-              //  if (string.IsNullOrEmpty(m_selector))
+                if (string.IsNullOrEmpty(m_selector))
                     m_proxy = GetDefaultProxy();
-              //  else
-              //  {
-              //      m_proxy = FindProxy(m_selector);
-              //  }
+                else
+                {
+                    m_proxy = FindProxy(m_selector);
+                }
             }
             if (m_proxy == null)
             {

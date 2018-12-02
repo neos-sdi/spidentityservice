@@ -22,10 +22,9 @@ using System.Xml;
 
 namespace SharePoint.IdentityService.Core
 {
-    #region IWrapper
-    public interface IWrapper
+    #region IWrapperNoInit
+    public interface IWrapperNoInit
     {
-        void Initialize(List<ProxyFullConfiguration> configs, List<ProxyGeneralParameter> glbparams);
         void EnsureLoaded();
         ProxyResults FillSearch(string pattern, string domain, bool recursive);
         ProxyResults FillResolve(string pattern, bool recursive);
@@ -37,6 +36,15 @@ namespace SharePoint.IdentityService.Core
         void Log(Exception ex, string message, EventLogEntryType eventLogEntryType, int eventid = 0);
         void Trace(string message, EventLogEntryType eventLogEntryType, int eventid = 0);
         string ClaimsProviderName { get; set; }
+
+    }
+    #endregion
+
+    #region IWrapper
+    public interface IWrapper: IWrapperNoInit
+    {
+        Int64 ConnectorID { get; set; }
+        void Initialize(List<ProxyFullConfiguration> configs, List<ProxyGeneralParameter> glbparams);
     }
     #endregion
 

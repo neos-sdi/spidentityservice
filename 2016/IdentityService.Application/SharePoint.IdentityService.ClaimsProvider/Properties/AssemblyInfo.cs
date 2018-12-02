@@ -13,7 +13,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("NEOS-SDI")]
 [assembly: AssemblyProduct("SharePoint IdentityService Claims Provider")]
-[assembly: AssemblyCopyright("Copyright ©  Neos-SDI 2016")]
+[assembly: AssemblyCopyright("Copyright ©  Neos-SDI 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -36,5 +36,5 @@ using System.Resources;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("16.0.0.0")]
-[assembly: AssemblyFileVersion("16.0.0.2")]
+[assembly: AssemblyFileVersion("16.0.1.1")]
 [assembly: NeutralResourcesLanguageAttribute("")]

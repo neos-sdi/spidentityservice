@@ -361,7 +361,7 @@
     <value>Show System accounts (local)</value>
   </data>
   <data name="PRMSUPPORTSUSERKEY" xml:space="preserve">
-    <value>Use of "SupportsUserKey" feature</value>
+    <value>Use of "SupportsUserKey"  feature</value>
   </data>
   <data name="SVCAPPDESC" xml:space="preserve">
     <value>Specify the name, database, application pool for this service application</value>

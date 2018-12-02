@@ -257,7 +257,7 @@ namespace SharePoint.IdentityService.AdminPages
                             SPUtility.HandleAccessDenied(new UnauthorizedAccessException("You are not authorized to access this page."));
                     }
 
-                    _trustedproviderslist = Utilities.GetClaimProviderCandidates(true);
+                    _trustedproviderslist = Utilities.GetClaimProviderCandidates(true); 
                     InputClaimProviderDropBox.Items.Add(new ListItem("--Select--", "NONE"));
                     foreach (ClaimProviderDefinition current in TrustedProviderList)
                     {
@@ -355,7 +355,7 @@ namespace SharePoint.IdentityService.AdminPages
                     if (db.UseWindowsAuthentication)
                         cred = CredentialCache.DefaultNetworkCredentials;
                     else
-                    cred = new NetworkCredential(db.DatabaseUserName, db.DatabasePassword);
+                        cred = new NetworkCredential(db.DatabaseUserName, db.DatabasePassword);
                     SPIisWebServiceApplicationPool ap = (this.ApplicationPoolSection == null) ? null : this.ApplicationPoolSection.GetOrCreateApplicationPool();
                     Utilities.CreateServiceApplicationAndProxy(true, name, ap, db.DatabaseName.Trim(), db.DatabaseServer.Trim(), db.FailoverDatabaseServer, cred, false, CBReplaceDB.Checked);
                     Utilities.CreateUpdateDeleteClaimProvider(name, this.InputClaimProviderDropBox.SelectedValue, this.txtInputFormDisplayClaimName.Text, this.txtInputFormTextClaimDesc.Text, this.visibilityCB.Checked, this.CanUpdateProvider());

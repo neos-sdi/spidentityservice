@@ -5,12 +5,14 @@ GO
 
 CREATE TABLE [dbo].AssemblyConfiguration
 (
-[AssemblyFulldescription] varchar(256) NOT NULL ,
-[AssemblyTypeDescription] varchar(256) NOT NULL ,
-[TraceResolve] [bit] NOT NULL,
-[Selected] [bit] NOT NULL,
-[ClaimsExt] [bit] NOT NULL,
-CONSTRAINT [PK_AssemblyConfiguration] PRIMARY KEY CLUSTERED ( [AssemblyFulldescription] )
+	[ID] [bigint] IDENTITY(1,1) NOT NULL,
+	[AssemblyFulldescription] varchar(256) NOT NULL ,
+	[AssemblyTypeDescription] varchar(256) NOT NULL ,
+	[TraceResolve] [bit] NOT NULL,
+	[Selected] [bit] NOT NULL,
+	[ClaimsExt] [bit] NOT NULL,
+	CONSTRAINT [PK_AssemblyConfiguration] PRIMARY KEY CLUSTERED ( [AssemblyFulldescription] ),
+	CONSTRAINT [IX_AssemblyConfiguration] UNIQUE NONCLUSTERED (	[ID] )
 )
 GO
 
@@ -24,24 +26,32 @@ ALTER TABLE [dbo].[AssemblyConfiguration] ADD  CONSTRAINT [DF_AssemblyConfigurat
 GO
 
 INSERT INTO [dbo].[AssemblyConfiguration] ([AssemblyFulldescription], [AssemblyTypeDescription], [TraceResolve], [Selected], [ClaimsExt])
-VALUES ('SharePoint.IdentityService.ActiveDirectory, Version=16.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.ActiveDirectory.ActiveDirectoryWrapper', 1, 1, 0)
+VALUES ('SharePoint.IdentityService.ActiveDirectory, Version=16.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.ActiveDirectory.ActiveDirectoryWrapper', 0, 1, 0)
 GO
 
 INSERT INTO [dbo].[AssemblyConfiguration] ([AssemblyFulldescription], [AssemblyTypeDescription], [TraceResolve], [Selected], [ClaimsExt]) 
-VALUES ('SharePoint.IdentityService.Application, Version=16.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.ClaimsAugmenter', 1, 1, 1)
+VALUES ('SharePoint.IdentityService.LDAP, Version=16.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.LDAP.LDAPWrapper', 0, 1, 0)
+GO
+
+INSERT INTO [dbo].[AssemblyConfiguration] ([AssemblyFulldescription], [AssemblyTypeDescription], [TraceResolve], [Selected], [ClaimsExt]) 
+VALUES ('SharePoint.IdentityService.Application, Version=16.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$','SharePoint.IdentityService.ClaimsAugmenter', 0, 1, 1)
 GO
 
 CREATE TABLE [dbo].[ConnectionConfiguration]
 (
-[ConnectionName] [nchar](18) NOT NULL,
-[UserName] [varchar](50) NOT NULL,
-[Password] [varchar](1024) NOT NULL,
-[TimeOut] [smallint] NULL,
-[Secure] [bit] NULL,
-[MaxRows] [int] NULL,
-[ConnectString] [varchar](1024) NULL,
-CONSTRAINT [PK_ConnectionConfiguration] PRIMARY KEY CLUSTERED ([ConnectionName])
+	[ConnectionName] [nchar](18) NOT NULL,
+	[UserName] [varchar](50) NOT NULL,
+	[Password] [varchar](1024) NOT NULL,
+	[TimeOut] [smallint] NULL,
+	[Secure] [bit] NULL,
+	[MaxRows] [int] NULL,
+	[ConnectString] [varchar](1024) NULL,
+	[ConnectorID] [bigint] NOT NULL,
+	CONSTRAINT [PK_ConnectionConfiguration] PRIMARY KEY CLUSTERED ( [ConnectionName] )
 )
+GO
+
+ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_ConnectionName]  DEFAULT (N'default') FOR [ConnectionName]
 GO
 
 ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_TimeOut]  DEFAULT ((30)) FOR [TimeOut]
@@ -53,17 +63,29 @@ GO
 ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_MaxRows]  DEFAULT ((200)) FOR [MaxRows]
 GO
 
-INSERT INTO [dbo].[ConnectionConfiguration] ([ConnectionName], [UserName],	[Password],	[TimeOut], [Secure], [MaxRows])
-VALUES ('default','yourdomain\youruser', 'password', 30, 1, 200)
+ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_ConnectorID]  DEFAULT ((1)) FOR [ConnectorID]
 GO
 
-CREATE TABLE [dbo].[DomainConfiguration](
-[DnsName] [varchar](100) NOT NULL,
-[DisplayName] [varchar](100) NOT NULL,
-[Enabled] [bit] NULL,
-[Connection] [nchar](18) NOT NULL,
-[DisplayPosition] int NULL,
-CONSTRAINT [PK_DomainConfiguration] PRIMARY KEY CLUSTERED ([DisplayName])
+ALTER TABLE [dbo].[ConnectionConfiguration]  WITH CHECK ADD  CONSTRAINT [FK_ConnectionConfiguration_AssemblyConfiguration] FOREIGN KEY([ConnectorID]) REFERENCES [dbo].[AssemblyConfiguration] ([ID])
+GO
+
+ALTER TABLE [dbo].[ConnectionConfiguration] CHECK CONSTRAINT [FK_ConnectionConfiguration_AssemblyConfiguration]
+GO
+
+INSERT INTO [dbo].[ConnectionConfiguration] ([ConnectionName], [UserName],	[Password],	[TimeOut], [Secure], [MaxRows], [ConnectorID])
+VALUES ('default','yourdomain\youruser', 'password', 30, 1, 200, 1)
+GO
+
+
+
+CREATE TABLE [dbo].[DomainConfiguration]
+(
+	[DnsName] [varchar](100) NOT NULL,
+	[DisplayName] [varchar](100) NOT NULL,
+	[Enabled] [bit] NULL,
+	[Connection] [nchar](18) NOT NULL,
+	[DisplayPosition] int NULL,
+	CONSTRAINT [PK_DomainConfiguration] PRIMARY KEY CLUSTERED ([DisplayName])
 )
 
 ALTER TABLE [dbo].[DomainConfiguration]  WITH NOCHECK ADD  CONSTRAINT [FK_DomainConfiguration_ConnectionConfiguration] FOREIGN KEY([Connection]) REFERENCES [dbo].[ConnectionConfiguration] ([ConnectionName])
