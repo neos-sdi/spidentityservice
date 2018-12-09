@@ -57,7 +57,7 @@ GO
 ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_TimeOut]  DEFAULT ((30)) FOR [TimeOut]
 GO
 
-ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_Secure]  DEFAULT ((1)) FOR [Secure]
+ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_Secure]  DEFAULT ((0)) FOR [Secure]
 GO
 
 ALTER TABLE [dbo].[ConnectionConfiguration] ADD  CONSTRAINT [DF_ConnectionConfiguration_MaxRows]  DEFAULT ((200)) FOR [MaxRows]
@@ -73,7 +73,7 @@ ALTER TABLE [dbo].[ConnectionConfiguration] CHECK CONSTRAINT [FK_ConnectionConfi
 GO
 
 INSERT INTO [dbo].[ConnectionConfiguration] ([ConnectionName], [UserName],	[Password],	[TimeOut], [Secure], [MaxRows], [ConnectorID])
-VALUES ('default','yourdomain\youruser', 'password', 30, 1, 200, 1)
+VALUES ('default','yourdomain\youruser', 'password', 30, 0, 200, 1)
 GO
 
 

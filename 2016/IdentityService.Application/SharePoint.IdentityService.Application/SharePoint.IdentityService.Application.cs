@@ -903,22 +903,25 @@ namespace SharePoint.IdentityService
             {
                 SPSecurity.RunWithElevatedPrivileges(delegate()
                 {
-                    string key = IdentityServiceCertificate.GetSharePointCertificate();
-                    try
+                    using (PasswordManager pwd = new PasswordManager())
                     {
-                        if (config != null)
+                        try
                         {
-                            string cleartext = PasswordManager.Decrypt(config.Password, key);
-                            config.Password = PasswordManager.Encrypt(cleartext, key);
+                            if (config != null)
+                            {
+                                string cleartext = pwd.Decrypt(config.Password);
+                                config.Password = pwd.Encrypt(cleartext);
+                            }
+                            if (newconfig != null)
+                            {
+                                newconfig.Password = pwd.Encrypt(newconfig.Password);
+                            }
                         }
-                        if (newconfig != null)
+                        catch
                         {
-                            newconfig.Password = PasswordManager.Encrypt(newconfig.Password, key);
+                            if (newconfig != null)
+                                newconfig.Password = pwd.Encrypt(newconfig.Password);
                         }
-                    }
-                    catch
-                    {
-                        newconfig.Password = PasswordManager.Encrypt(newconfig.Password, key);
                     }
                     res =  Database.SetConnectionConfiguration(config, newconfig);
                 });
@@ -2111,7 +2114,6 @@ namespace SharePoint.IdentityService
         /// </summary>
         private void InitializeFromDatabase()
         {
-            string key = GetSharePointCertificate();
             Initialize();
             EnsureLoaded();
 
@@ -2121,8 +2123,13 @@ namespace SharePoint.IdentityService
                 if (cch != null)
                 {
                     XmlDocument res = cch.Save();
-                    string data = PasswordEncrypt(res.OuterXml, key);
-                    Database.SetDataToCache(data);
+
+                    using (PasswordManager pwd = new PasswordManager())
+                    {
+                        string cdata = res.OuterXml;
+                        string data = pwd.SymetricEncrypt(cdata);
+                        Database.SetDataToCache(data);
+                    }
                 }
             }
             Database.ClearAccessToCache();
@@ -2133,12 +2140,13 @@ namespace SharePoint.IdentityService
         /// </summary>
         private void InitializeFromCache()
         {
-            string key = GetSharePointCertificate();
             string cdata = Database.GetDataFromCache();
-            string data = PasswordDecrypt(cdata, key);
             XmlDocument doc = new XmlDocument();
-            doc.LoadXml(data);
-
+            using (PasswordManager pwd = new PasswordManager())
+            {
+                string data = pwd.SymetricDecrypt(cdata);
+                doc.LoadXml(data);
+            }
             foreach (ConnectorConfigurationWrapper cfg in Assemblywrappers)
             {
                 IWrapperCaching cch = cfg.Wrapper as IWrapperCaching;
@@ -2173,7 +2181,6 @@ namespace SharePoint.IdentityService
         /// </summary>
         private List<ProxyFullConfiguration> GetFullConfigurations(IEnumerable<FullConfiguration> src)
         {
-            string key = GetSharePointCertificate();
             List<ProxyFullConfiguration> prxy = new List<ProxyFullConfiguration>();
             foreach (FullConfiguration c in src)
             {
@@ -2187,7 +2194,7 @@ namespace SharePoint.IdentityService
                 p.ConnectorID = c.ConnectorID;
                 try
                 {
-                    p.Password = PasswordDecrypt(c.Password, key);
+                    p.Password = PasswordDecrypt(c.Password);
                 }
                 catch (SharePointIdentityCryptographicException)
                 {
@@ -2195,7 +2202,7 @@ namespace SharePoint.IdentityService
                     ConnectionConfiguration xcfg = new ConnectionConfiguration();
                     xcfg.ConnectionName = c.Connection;
                     xcfg.Username = c.UserName;
-                    xcfg.Password = PasswordEncrypt(c.Password, key);
+                    xcfg.Password = PasswordEncrypt(c.Password);
                     xcfg.Timeout = c.Timeout;
                     xcfg.Secure = c.Secure;
                     xcfg.Maxrows = c.Maxrows;
@@ -2242,41 +2249,23 @@ namespace SharePoint.IdentityService
             }
             return glb;
         }
-        #endregion
-
-        /// <summary>
-        /// GetSharePointCertificate method implementation
-        /// </summary>
-        private string GetSharePointCertificate()
-        {
-            const string errorstr = "Cannot Access to SharePoint Certificate Store, Process cannot continue";
-            string key = null;
-            try
-            {
-                key = IdentityServiceCertificate.GetSharePointCertificate();
-                if (string.IsNullOrEmpty(key))
-                    throw new Exception(errorstr);
-            }
-            catch (Exception E)
-            {
-                LogEvent.Log(E, errorstr, EventLogEntryType.Error, 20000);
-                throw E;
-            }
-            return key;
-        }
+        #endregion      
 
         /// <summary>
         /// PasswordDecrypt method implementation
         /// </summary>
-        private string PasswordDecrypt(string cdata, string key)
+        private string PasswordDecrypt(string cdata)
         {
             const string errorstr = "Cannot decrypt password, Process cannot continue";
             string data = null;
             try
             {
-                data = PasswordManager.Decrypt(cdata, key);
-                if (string.IsNullOrEmpty(data))
-                    throw new Exception(errorstr);
+                using (PasswordManager pwd = new PasswordManager())
+                {
+                    data = pwd.Decrypt(cdata);
+                    if (string.IsNullOrEmpty(data))
+                        throw new Exception(errorstr);
+                }
             }
             catch (Exception E)
             {
@@ -2289,15 +2278,18 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// PasswordEncrypt method implementation
         /// </summary>
-        private string PasswordEncrypt(string cdata, string key)
+        private string PasswordEncrypt(string cdata)
         {
             const string errorstr = "Cannot encrypt password, Process cannot continue";
             string data = null;
             try
             {
-                data = PasswordManager.Encrypt(cdata, key);
-                if (string.IsNullOrEmpty(data))
-                    throw new Exception(errorstr);
+                using (PasswordManager pwd = new PasswordManager())
+                {
+                    data = pwd.Encrypt(cdata);
+                    if (string.IsNullOrEmpty(data))
+                        throw new Exception(errorstr);
+                }
             }
             catch (Exception E)
             {

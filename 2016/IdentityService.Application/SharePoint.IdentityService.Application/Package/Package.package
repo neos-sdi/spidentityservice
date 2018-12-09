@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="bd117888-9200-47d5-a422-8d13f4405116" solutionId="bd117888-9200-404c-a422-8d13f4405116" resetWebServer="true" deploymentServerType="ApplicationServer" sharePointProductVersion="15.0" name="SharePoint.IdentityService" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="bd117888-9200-47d5-a422-8d13f4405116" solutionId="bd117888-9200-404c-a422-8d13f4405116" resetWebServer="true" deploymentServerType="ApplicationServer" sharePointProductVersion="16.0" name="SharePoint.IdentityService" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
   <assemblies>
     <projectOutputAssembly location="SharePoint.IdentityService.ActiveDirectory.dll" deploymentTarget="GlobalAssemblyCache" projectPath="..\SharePoint.IdentityService.ActiveDirectory\SharePoint.IdentityService.ActiveDirectory.csproj" />
     <projectOutputAssembly location="SharePoint.IdentityService.Core.dll" deploymentTarget="GlobalAssemblyCache" projectPath="..\SharePoint.IdentityService.Core\SharePoint.IdentityService.Core.csproj" />

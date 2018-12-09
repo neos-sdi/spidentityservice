@@ -76,6 +76,10 @@
     <None Include="tempsignature.snk" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SharePoint.IdentityService.ActiveDirectory\SharePoint.IdentityService.ActiveDirectory.csproj">
+      <Project>{CB0B1403-9062-4387-AB6A-56A0D2922D5A}</Project>
+      <Name>SharePoint.IdentityService.ActiveDirectory</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SharePoint.IdentityService.Core\SharePoint.IdentityService.Core.csproj">
       <Project>{009174ac-0149-4aa1-a339-63f550dd2e71}</Project>
       <Name>SharePoint.IdentityService.Core</Name>

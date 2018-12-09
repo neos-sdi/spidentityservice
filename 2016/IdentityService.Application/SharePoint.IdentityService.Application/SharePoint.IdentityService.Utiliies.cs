@@ -17,6 +17,7 @@ using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 using Microsoft.SharePoint.Administration.AccessControl;
 using Microsoft.SharePoint.Administration.Claims;
+using SharePoint.IdentityService.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -643,10 +644,10 @@ namespace SharePoint.IdentityService
         /// </summary>
         public static string GetClaimProviderInternalName(string value)
         {
-            if (value.StartsWith("0x2477"))
+            if (value.StartsWith(ClaimProviderNameHeader.Header))
                 return value;
             else
-                return "0x2477"+value;
+                return ClaimProviderNameHeader.Header + value;
         }
 
         /// <summary>
@@ -654,8 +655,8 @@ namespace SharePoint.IdentityService
         /// </summary>
         public static string GetClaimProviderName(string value)
         {
-            if (value.StartsWith("0x2477"))
-                return value.Replace("0x2477","");
+            if (value.StartsWith(ClaimProviderNameHeader.Header))
+                return value.Replace(ClaimProviderNameHeader.Header, "");
             else
                 return value;
         }

@@ -207,10 +207,8 @@
       <DependentUpon>SharePoint.IdentityService.ClaimsProvider.resx</DependentUpon>
     </Compile>
     <Compile Include="SharePoint.IdentityService.Application.Resources.cs" />
-    <Compile Include="SharePoint.IdentityService.Certificate.cs" />
     <Compile Include="SharePoint.IdentityService.Database.SqlMapper.cs" />
     <Compile Include="SharePoint.IdentityService.Jobs.cs" />
-    <Compile Include="SharePoint.IdentityService.Pwd.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SharePoint.IdentityService.Administration.cs" />
     <Compile Include="SharePoint.IdentityService.Application.cs" />
@@ -246,6 +244,7 @@
     </None>
     <None Include="Package\Package.Template.xml">
       <DependentUpon>Package.package</DependentUpon>
+      <SubType>Designer</SubType>
     </None>
     <Content Include="ADMIN\SharePoint.IdentityService\serviceapp.aspx">
       <SubType>ASPXCodeBehind</SubType>

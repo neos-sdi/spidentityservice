@@ -300,4 +300,9 @@ namespace SharePoint.IdentityService.Core
         Builtin = 3
     }
     #endregion
+
+    public static class ClaimProviderNameHeader
+    {
+        public const string Header = "SPIS2477";
+    }
 }

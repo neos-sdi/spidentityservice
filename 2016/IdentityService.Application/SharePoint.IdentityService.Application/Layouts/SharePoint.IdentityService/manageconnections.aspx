@@ -142,7 +142,7 @@ SharePoint Identity Services
                                     </ItemTemplate>
                                     <FooterTemplate>
                                         <br />
-                                        <asp:TextBox ID="newConnectString" runat="server" Width="200px"  ValidationGroup="A" />
+                                        <asp:TextBox ID="newConnectString" runat="server" Width="350px"  ValidationGroup="A" />
                                     </FooterTemplate>
                                 </asp:TemplateField>
                                 <asp:TemplateField HeaderText="Actions" FooterStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center">

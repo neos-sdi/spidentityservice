@@ -58,6 +58,7 @@
     <Compile Include="SharePoint.IdentityService.Core.cs" />
     <Compile Include="SharePoint.IdentityService.Contract.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SharePoint.IdentityService.Pwd.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="neos-sdi.pfx" />

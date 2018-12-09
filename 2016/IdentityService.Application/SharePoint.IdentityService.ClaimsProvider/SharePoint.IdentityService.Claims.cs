@@ -1,4 +1,4 @@
-﻿// #define bugms
+﻿#define supportskey
 //******************************************************************************************************************************************************************************************//
 // Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
@@ -33,8 +33,8 @@ namespace SharePoint.IdentityService.ClaimsProvider
         private string _localizeddisplayname;
         private string _trustedloginprovidername;
         private bool _iscontextloaded = false;
-        private string _useridentityclaim = ""; //ClaimType.ClaimUPN; // to be overriden
-        private string _roleidentityclaim = ""; //ClaimType.ClaimRole; // to be overriden
+        private string _useridentityclaim = SPClaimTypes.UserPrincipalName; // to be overriden
+        private string _roleidentityclaim = SPClaimTypes.ModernGroupClaimType; // to be overriden
         private bool _supportsuserkey = true; // to be overriden;
         private IdentityServiceClient _ad = null;
         private ProxyClaimsMode _claimsmode = ProxyClaimsMode.Federated;  // to be overriden
@@ -52,15 +52,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
         {
             lock (_lockobj)
             {
-
                 _displayname = displayName;
-                try
-                {
-                    EnsureContext();
-                }
-                catch
-                {
-                }
             }
         }
 
@@ -71,32 +63,37 @@ namespace SharePoint.IdentityService.ClaimsProvider
         {
             try
             {
-                if ((_ad == null) || (false == _ad.IsInitialized))
+                if ((!IsContextAvailable) && (_ad == null) || (!_ad.IsInitialized))
                 {
-                    using (SPMonitoredScope scp = new SPMonitoredScope("IdentityServiceClaimsProvider:EnsureContext"))
+                    lock (_lockobj)
                     {
-                        _ad = new IdentityServiceClient(GetInternalName(_displayname));
-                        if ((_ad != null) && (true == _ad.IsInitialized))
+                        using (SPMonitoredScope scp = new SPMonitoredScope("IdentityServiceClaimsProvider:EnsureContext"))
                         {
-                            ProxyClaimsProviderParameters prm = _ad.FillClaimsProviderParameters();
-                            _trustedloginprovidername = prm.TrustedLoginProviderName;
-                            _localizeddisplayname = prm.ClaimDisplayName;
-                            _peoplepickerimages = prm.PeoplePickerImages;
-                            _claimsmode = prm.ClaimProviderMode;
-                            _claimidentitymode = prm.ClaimProviderIdentityMode;
-                            _claimrolemode = prm.ClaimProviderRoleMode;
-                            _useridentityclaim = prm.ClaimProviderIdentityClaim;
-                            _roleidentityclaim = prm.ClaimProviderRoleClaim;
-                            _claimsdisplaymode = prm.ClaimsProviderDisplayMode;
-                            _peoplepickerdisplaymode = prm.ClaimsProviderPeoplePickerMode;
-                            _supportsuserkey = prm.ClaimProviderSupportsUserKey;
-                            _iscontextloaded = true;
+                            _ad = new IdentityServiceClient(GetInternalName(_displayname));
+                            if ((_ad != null) && (_ad.IsInitialized))
+                            {
+                                ProxyClaimsProviderParameters prm = _ad.FillClaimsProviderParameters();
+                                _trustedloginprovidername = prm.TrustedLoginProviderName;
+                                _localizeddisplayname = prm.ClaimDisplayName;
+                                _peoplepickerimages = prm.PeoplePickerImages;
+                                _claimsmode = prm.ClaimProviderMode;
+                                _claimidentitymode = prm.ClaimProviderIdentityMode;
+                                _claimrolemode = prm.ClaimProviderRoleMode;
+                                _useridentityclaim = prm.ClaimProviderIdentityClaim;
+                                _roleidentityclaim = prm.ClaimProviderRoleClaim;
+                                _claimsdisplaymode = prm.ClaimsProviderDisplayMode;
+                                _peoplepickerdisplaymode = prm.ClaimsProviderPeoplePickerMode;
+                                _supportsuserkey = prm.ClaimProviderSupportsUserKey;
+                                _iscontextloaded = true;
+                            }
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _iscontextloaded = false;
+                _ad = null;
             }
         }
 
@@ -109,10 +106,10 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 return "AD";
             if (value.ToLower().Equals("windows"))
                 return "AD";
-            if (value.StartsWith("0x2477"))
+            if (value.StartsWith(ClaimProviderNameHeader.Header))
                 return value;
             else
-                return "0x2477" + value;
+                return ClaimProviderNameHeader.Header + value;
         }
 
         /// <summary>
@@ -193,6 +190,21 @@ namespace SharePoint.IdentityService.ClaimsProvider
             }
         }
 
+        // The claim from this provider should have redhook as the provider name.
+        private string IssuerName
+        {
+            get
+            {
+                string result = string.Empty;
+                if (_claimsmode == ProxyClaimsMode.Federated)
+                    result = SPOriginalIssuers.Format(SPOriginalIssuerType.TrustedProvider, AssociatedTrustedLoginProviderName);
+                else
+                    result = SPOriginalIssuers.Format(SPOriginalIssuerType.Windows, AssociatedTrustedLoginProviderName);
+                return result;
+            }
+        }
+
+
         /// <summary>
         /// SupportsEntityInformation property override
         /// </summary>
@@ -233,16 +245,13 @@ namespace SharePoint.IdentityService.ClaimsProvider
             get  { return false; }
         }
 
+#if supportskey
         /// <summary>
         /// SupportsUserKey property override;
         /// </summary>
         public override bool SupportsUserKey 
         {
-#if bugms
-            get { return false; }
-#else
             get { return _supportsuserkey; }
-#endif
         }
 
         /// <summary>
@@ -250,8 +259,15 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// </summary>
         public override string GetClaimTypeForUserKey()
         {
-            EnsureContext();
-            return _useridentityclaim;
+            if (!IsContextAvailable)
+            {
+                if (_displayname.ToLowerInvariant().Trim().Equals("ad"))
+                    return Microsoft.IdentityModel.Claims.ClaimTypes.WindowsAccountName;
+                else
+                    return Microsoft.IdentityModel.Claims.ClaimTypes.Upn;
+            }
+            else
+                return _useridentityclaim;
         }
 
         /// <summary>
@@ -259,18 +275,29 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// </summary>
         protected override SPClaim GetUserKeyForEntity(SPClaim entity)
         {
-            EnsureContext();
+            if (String.Equals(entity.OriginalIssuer, this.IssuerName, StringComparison.InvariantCultureIgnoreCase))
+                return entity;
+
+            SPClaimProviderManager cpm = SPClaimProviderManager.Local;
+            SPClaim curUser = SPClaimProviderManager.DecodeUserIdentifierClaim(entity);
+            if (curUser != null)
+                return CreateClaimForSTS(GetClaimTypeForUserKey(), curUser.Value);
+            else
+                return null;
+
+/*
             if (entity.ClaimType.ToLowerInvariant().Equals(_useridentityclaim.ToLowerInvariant()))
                 return entity;
             else
-                return new SPClaim(_useridentityclaim, entity.Value, entity.ValueType, entity.OriginalIssuer);
+                return new SPClaim(GetClaimTypeForUserKey(), entity.Value, entity.ValueType, entity.OriginalIssuer);          
+*/
         }
-
-#region Claims Augmentation
-        /// <summary>
-        /// FillClaimTypes method override
-        /// </summary>
-        /// <param name="claimTypes"></param>
+#endif
+                #region Claims Augmentation
+                /// <summary>
+                /// FillClaimTypes method override
+                /// </summary>
+                /// <param name="claimTypes"></param>
         protected override void FillClaimTypes(List<string> claimTypes)
         {
             if (null == claimTypes)
@@ -359,9 +386,9 @@ namespace SharePoint.IdentityService.ClaimsProvider
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Nothing
+                    LogEvent.Log(ex, ex.Message, EventLogEntryType.Error, 7000);
                 }
             }
         }
@@ -385,6 +412,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
         {
             get 
             {
+                EnsureContext();
                 return this._useridentityclaim;
             }
         }

@@ -27,6 +27,8 @@ namespace SharePoint.IdentityService
     using Microsoft.SharePoint.Utilities;
     using SharePoint.IdentityService.Core;
     using Microsoft.SharePoint.Administration.Claims;
+    using System.Diagnostics;
+    using ActiveDirectory;
 
     [IisWebServiceApplicationProxyBackupBehavior]
     [Guid("EDF76E21-FBA9-404C-B414-A4380D818169")]
