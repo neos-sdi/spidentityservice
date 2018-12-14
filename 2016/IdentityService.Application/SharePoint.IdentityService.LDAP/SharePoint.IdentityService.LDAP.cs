@@ -343,7 +343,10 @@ namespace SharePoint.IdentityService.LDAP
                 SearchResultCollection ldapSearchResult;
                 try
                 {
-                    ldapDirectory = new DirectoryEntry(ldapPath, dom.UserName, dom.Password, auth);
+                    if (string.IsNullOrEmpty(dom.UserName))
+                        ldapDirectory = new DirectoryEntry(ldapPath);
+                    else
+                        ldapDirectory = new DirectoryEntry(ldapPath, dom.UserName, dom.Password, auth);
                     ldapDirectorySearcher = new DirectorySearcher(ldapDirectory, ldapquery);
                     ConfigureSearcherForUsers(ldapDirectorySearcher, 1, dom.Timeout);
                     ldapSearchResult = ldapDirectorySearcher.FindAll();
@@ -401,7 +404,10 @@ namespace SharePoint.IdentityService.LDAP
                     }
                     timeout = cfg.Timeout;
                     maxrows = cfg.MaxRows;
-                    return new DirectoryEntry(ldapPath, cfg.UserName, cfg.Password, auth); ;
+                    if (string.IsNullOrEmpty(cfg.UserName))
+                        return new DirectoryEntry(ldapPath);
+                    else
+                        return new DirectoryEntry(ldapPath, cfg.UserName, cfg.Password, auth);
                 }
             }
             return null;

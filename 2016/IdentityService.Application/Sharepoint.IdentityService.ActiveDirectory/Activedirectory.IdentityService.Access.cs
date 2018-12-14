@@ -1719,13 +1719,24 @@ namespace SharePoint.IdentityService.ActiveDirectory
             DirectoryEntry oPartition = null;
             try
             {
-                myRootDSE = new DirectoryEntry(@"LDAP://RootDSE", _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                if (string.IsNullOrEmpty(_aduser))
+                    myRootDSE = new DirectoryEntry(@"LDAP://RootDSE");
+                else
+                    myRootDSE = new DirectoryEntry(@"LDAP://RootDSE", _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
                 myRootDSE.RefreshCache();
                 string strNamingContext = myRootDSE.Properties["defaultNamingContext"].Value.ToString();
                 string strConfigContext = myRootDSE.Properties["configurationNamingContext"].Value.ToString();
-                oDomain = new DirectoryEntry(@"LDAP://" + strNamingContext, _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
 
-                oPartition = new DirectoryEntry(@"LDAP://CN=Partitions," + strConfigContext, _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                if (string.IsNullOrEmpty(_aduser))
+                {
+                    oDomain = new DirectoryEntry(@"LDAP://" + strNamingContext);
+                    oPartition = new DirectoryEntry(@"LDAP://CN=Partitions," + strConfigContext);
+                }
+                else
+                {
+                    oDomain = new DirectoryEntry(@"LDAP://" + strNamingContext, _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                    oPartition = new DirectoryEntry(@"LDAP://CN=Partitions," + strConfigContext, _aduser, _adpwd, AuthenticationTypes.Signing | AuthenticationTypes.Sealing | AuthenticationTypes.Secure);
+                }
                 oDomain.Invoke("GetInfoEx", new object[] { "canonicalName" }, 0);
 
                 lst.Add(new ActiveDirectoryTopLevelName(oDomain.InvokeGet("canonicalName").ToString().Replace("/", ""), Core.TopLevelNameStatus.Enabled));
@@ -2614,7 +2625,10 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 DirectoryEntry RootDSE = null;
                 try
                 {
-                    RootDSE = new DirectoryEntry(@"LDAP://"+domain+"/RootDSE", _aduser, _adpwd, _secureparams);
+                    if (string.IsNullOrEmpty(_aduser))
+                        RootDSE = new DirectoryEntry(@"LDAP://" + domain + "/RootDSE");
+                    else
+                        RootDSE = new DirectoryEntry(@"LDAP://"+domain+"/RootDSE", _aduser, _adpwd, _secureparams);
                     RootDSE.RefreshCache();
                     string strNamingContext = RootDSE.Properties["defaultNamingContext"].Value.ToString();
                     string strConfigContext = RootDSE.Properties["configurationNamingContext"].Value.ToString();
@@ -2650,7 +2664,12 @@ namespace SharePoint.IdentityService.ActiveDirectory
         private string GetNetBiosName(string ldapUrl, string dnsname, string userName, string password, AuthenticationTypes secure)
         {
             string netbiosName = string.Empty;
-            using (DirectoryEntry dirEntry = new DirectoryEntry(ldapUrl, userName, password, secure))
+            DirectoryEntry dirEntry = null;
+            if (string.IsNullOrEmpty(userName))
+                dirEntry = new DirectoryEntry(ldapUrl);
+            else
+                dirEntry = new DirectoryEntry(ldapUrl, userName, password, secure);
+            using (dirEntry)
             {
                 using (DirectorySearcher searcher = new DirectorySearcher(dirEntry))
                 {
