@@ -235,7 +235,6 @@
     <None Include="SQL\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{d4569987-1002-4d18-a52b-e56564faaf59}</SharePointProjectItemId>
     </None>
-    <None Include="tempsignature.snk" />
     <None Include="WebClients\SharePoint.IdentityService\client.config">
       <SubType>Designer</SubType>
     </None>

@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="neos-sdi.pfx" />
-    <None Include="tempsignature.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

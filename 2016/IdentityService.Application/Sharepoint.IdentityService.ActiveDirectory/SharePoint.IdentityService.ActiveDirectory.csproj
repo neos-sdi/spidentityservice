@@ -66,7 +66,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="neos-sdi.pfx" />
-    <None Include="tempsignature.snk" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SharePoint.IdentityService.Core\SharePoint.IdentityService.Core.csproj">

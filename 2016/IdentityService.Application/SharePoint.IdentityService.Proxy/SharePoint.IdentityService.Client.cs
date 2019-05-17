@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -15,14 +15,10 @@
 
 namespace SharePoint.IdentityService
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Microsoft.SharePoint;
     using Microsoft.SharePoint.Administration;
     using SharePoint.IdentityService.Core;
-    using Microsoft.SharePoint.Administration.Claims;
+    using System;
+    using System.Collections.Generic;
 
     [Flags]
     public enum ExecuteOptions
@@ -34,7 +30,7 @@ namespace SharePoint.IdentityService
 
     public sealed class IdentityServiceClient
     {
-        private ServiceApplicationProxy m_proxy;
+        private IdentityServiceApplicationProxy m_proxy;
         private string m_selector;
         private bool m_isinitialized = false;
 
@@ -68,63 +64,55 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// GetProxy method implementation
         /// </summary>
-        private ServiceApplicationProxy GetProxy()
+        private IdentityServiceApplicationProxy GetProxy()
         {
             if (m_proxy == null)
-            {
-               // if (string.IsNullOrEmpty(m_selector))
-                    m_proxy = GetDefaultProxy();
-               // else
-               // {
-               //     m_proxy = FindProxy(m_selector);
-               // }
-            }
+                m_proxy = FindProxy(m_selector);
             if (m_proxy == null)
-            {
                 throw new ArgumentNullException("Identity Service Proxy", "This Web Application has no Identity Service Application assigned !");
-            }
             return m_proxy;
         }
 
         /// <summary>
         /// FindProxy method implementation
         /// </summary>
-        /// <returns></returns>
-        private ServiceApplicationProxy FindProxy(string selector)
+        private IdentityServiceApplicationProxy FindProxy(string selector)
         {
-            SPServiceProxyCollection proxies = SPFarm.Local.ServiceProxies;
-            foreach (SPServiceProxy SPSP in proxies)
+            if (!string.IsNullOrEmpty(selector))
             {
-                foreach (SPServiceApplicationProxy SPAP in SPSP.ApplicationProxies)
+                SPServiceProxyCollection proxies = SPFarm.Local.ServiceProxies;
+                foreach (SPServiceProxy SPSP in proxies)
                 {
-                    if (SPAP is ServiceApplicationProxy)
+                    foreach (SPServiceApplicationProxy SPAP in SPSP.ApplicationProxies)
                     {
-                        ServiceApplicationProxy b = SPAP as ServiceApplicationProxy;
-                        ProxyClaimsProviderParameters prm = b.FillClaimsProviderParameters();
-                        if ((prm.ClaimProviderName != null) && (prm.ClaimProviderName.ToLower().Trim().Equals(selector.ToLower().Trim())))
+                        if (SPAP is IdentityServiceApplicationProxy)
                         {
-                            return b;
+                            string clm = ((IdentityServiceApplicationProxy)SPAP).ClaimProviderName;
+                            if ((!string.IsNullOrEmpty(clm)) && (clm.ToLower().Equals(selector.ToLower())))
+                            {
+                                IdentityServiceApplicationProxy b = SPAP as IdentityServiceApplicationProxy;
+                                return b;
+                            }
                         }
                     }
                 }
             }
-            return null;
+            return GetDefaultProxy();
         }
 
         /// <summary>
         /// GetDefaultProxy method implementation
         /// </summary>
-        /// <returns></returns>
-        private ServiceApplicationProxy GetDefaultProxy()
+        private IdentityServiceApplicationProxy GetDefaultProxy()
         {
             SPServiceProxyCollection proxies = SPFarm.Local.ServiceProxies;
             foreach (SPServiceProxy SPSP in proxies)
             {
                 foreach (SPServiceApplicationProxy SPAP in SPSP.ApplicationProxies)
                 {
-                    if (SPAP is ServiceApplicationProxy)
+                    if (SPAP is IdentityServiceApplicationProxy)
                     {
-                        ServiceApplicationProxy b = SPAP as ServiceApplicationProxy;
+                        IdentityServiceApplicationProxy b = SPAP as IdentityServiceApplicationProxy;
                         return b;
                     }
                 }

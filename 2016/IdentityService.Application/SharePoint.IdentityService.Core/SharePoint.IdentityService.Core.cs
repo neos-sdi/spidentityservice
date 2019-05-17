@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -15,8 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Diagnostics;
 using System.Xml;
 
@@ -95,6 +93,9 @@ namespace SharePoint.IdentityService.Core
     {
         ProxySmoothRequest SmoothRequestor { get; set; }
         ProxyClaimsMode ClaimsMode { get; set; }
+        ProxyClaimsIdentityMode ClaimIdentityMode { get; set; }
+        ProxyClaimsRoleMode ClaimRoleMode { get; set; }
+        bool IsWindows { get; set; }
         ProxyClaimsDisplayMode ClaimsDisplayMode { get; set; }
         ProxyClaimsDisplayMode PeoplePickerDisplayMode { get; set; }
         bool SearchByMail { get; set; }
@@ -214,6 +215,7 @@ namespace SharePoint.IdentityService.Core
         bool? IsSecurityGroup { get; set; }
         Guid? GUID { get; set; }
         string SID { get; set; }
+        string EmailAddress { get; set; }
     }
     #endregion
 
@@ -301,8 +303,40 @@ namespace SharePoint.IdentityService.Core
     }
     #endregion
 
+    /// <summary>
+    /// ClaimProviderNameHeader method implementation
+    /// </summary>
     public static class ClaimProviderNameHeader
     {
         public const string Header = "SPIS2477";
+        /// <summary>
+        /// GetClaimProviderInternalName method implementation
+        /// </summary>
+        public static string GetClaimProviderInternalName(string value)
+        {
+            if (value.ToLower().Equals("ad"))
+                return "AD";
+            if (value.ToLower().Equals("windows"))
+                return "AD";
+            if (value.StartsWith(ClaimProviderNameHeader.Header))
+                return value;
+            else
+                return ClaimProviderNameHeader.Header + value;
+        }
+
+        /// <summary>
+        /// GetClaimProviderInternalName method implementation
+        /// </summary>
+        public static string GetClaimProviderName(string value)
+        {
+            if (value.ToLower().Equals("ad"))
+                return "AD";
+            if (value.ToLower().Equals("windows"))
+                return "AD";
+            if (value.StartsWith(ClaimProviderNameHeader.Header))
+                return value.Replace(ClaimProviderNameHeader.Header, "");
+            else
+                return value;
+        }
     }
 }

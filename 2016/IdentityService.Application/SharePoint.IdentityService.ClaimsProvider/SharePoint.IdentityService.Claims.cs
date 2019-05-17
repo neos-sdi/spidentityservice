@@ -1,6 +1,6 @@
 ﻿#define supportskey
 //******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -102,14 +102,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
         /// </summary>
         private string GetInternalName(string value)
         {
-            if (value.ToLower().Equals("ad"))
-                return "AD";
-            if (value.ToLower().Equals("windows"))
-                return "AD";
-            if (value.StartsWith(ClaimProviderNameHeader.Header))
-                return value;
-            else
-                return ClaimProviderNameHeader.Header + value;
+            return ClaimProviderNameHeader.GetClaimProviderInternalName(value);
         }
 
         /// <summary>
@@ -293,11 +286,11 @@ namespace SharePoint.IdentityService.ClaimsProvider
 */
         }
 #endif
-                #region Claims Augmentation
-                /// <summary>
-                /// FillClaimTypes method override
-                /// </summary>
-                /// <param name="claimTypes"></param>
+        #region Claims Augmentation
+        /// <summary>
+        /// FillClaimTypes method override
+        /// </summary>
+        /// <param name="claimTypes"></param>
         protected override void FillClaimTypes(List<string> claimTypes)
         {
             if (null == claimTypes)
@@ -748,6 +741,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                     entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
+                entity.EntityData[PeopleEditorEntityDataKeys.Email] = xcl.EmailAddress;
 
                 entity.Description = xcl.SamAaccount;
                 entity.DisplayText = xcl.SamAaccount;
@@ -861,6 +855,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 entity.HierarchyIdentifier = xcl.DomainDisplayName;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = xcl.SamAaccount;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
+                entity.EntityData[PeopleEditorEntityDataKeys.Email] = xcl.EmailAddress;
                 entity.IsResolved = true;
                 searchNode.AddEntity(entity);
                 return;
@@ -981,6 +976,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                     entity.EntityType = SPClaimEntityTypes.FormsRole;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = IdentityValue;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
+                entity.EntityData[PeopleEditorEntityDataKeys.Email] = xcl.EmailAddress;
 
                 entity.Description = xcl.SamAaccount;
                 entity.DisplayText = xcl.SamAaccount;
@@ -1084,6 +1080,7 @@ namespace SharePoint.IdentityService.ClaimsProvider
                 entity.DisplayText = xcl.SamAaccount;
                 entity.EntityData[PeopleEditorEntityDataKeys.AccountName] = xcl.SamAaccount;
                 entity.EntityData[PeopleEditorEntityDataKeys.DisplayName] = xcl.SamAaccount;
+                entity.EntityData[PeopleEditorEntityDataKeys.Email] = xcl.EmailAddress;
                 entity.IsResolved = true;
                 resolved.Add(entity);
                 return;

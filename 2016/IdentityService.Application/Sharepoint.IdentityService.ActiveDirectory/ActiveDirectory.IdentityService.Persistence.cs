@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                      
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                      
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -179,7 +179,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
             {
                 ActiveDirectoryRootDomain dr = ir;
                 IRootDomain pr = dr as IRootDomain;
-                res.RootDomains.Add(pr);
+                 res.RootDomains.Add(pr);
             }
             foreach (PersistedBadDomain ib in forests.BadDomains)
             {
@@ -520,6 +520,25 @@ namespace SharePoint.IdentityService.ActiveDirectory
         [DataMember]
         public ProxyClaimsMode ClaimsMode { get; set; }
 
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        [DataMember]
+        public ProxyClaimsIdentityMode ClaimIdentityMode { get; set; }
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        [DataMember]
+        public ProxyClaimsRoleMode ClaimRoleMode { get; set; }
+
+        /// <summary>
+        /// IsWindows property implementation
+        /// </summary>
+        [DataMember]
+        public bool IsWindows { get; set; }
+
         /// <summary>
         /// ClaimsDisplayMode  property implemtation
         /// </summary>
@@ -567,6 +586,9 @@ namespace SharePoint.IdentityService.ActiveDirectory
             PersistedGlobalParams glb = new PersistedGlobalParams();
             glb.ClaimsDisplayMode = glbparams.ClaimsDisplayMode;
             glb.ClaimsMode = glbparams.ClaimsMode;
+            glb.ClaimRoleMode = glbparams.ClaimRoleMode;
+            glb.ClaimIdentityMode = glbparams.ClaimIdentityMode;
+            glb.IsWindows = glbparams.IsWindows;
             glb.PeoplePickerDisplayMode = glbparams.PeoplePickerDisplayMode;
             glb.PeoplePickerImages = glbparams.PeoplePickerImages;
             glb.SearchByDisplayName = glbparams.SearchByDisplayName;
@@ -582,6 +604,9 @@ namespace SharePoint.IdentityService.ActiveDirectory
             ActiveDirectoryGlobalParams glb = new ActiveDirectoryGlobalParams();
             glb.ClaimsDisplayMode = glbparams.ClaimsDisplayMode;
             glb.ClaimsMode = glbparams.ClaimsMode;
+            glb.ClaimRoleMode = glbparams.ClaimRoleMode;
+            glb.ClaimIdentityMode = glbparams.ClaimIdentityMode;
+            glb.IsWindows = glbparams.IsWindows;
             glb.PeoplePickerDisplayMode = glbparams.PeoplePickerDisplayMode;
             glb.PeoplePickerImages = glbparams.PeoplePickerImages;
             glb.SearchByDisplayName = glbparams.SearchByDisplayName;

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                        
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                        
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -773,6 +773,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         u.SamAaccount = ((IRole)usr).SamAaccount;
                         u.GUID = ((IRole)usr).GUID;
                         u.SID = ((IRole)usr).SID;
+                        u.EmailAddress = ((IRole)usr).EmailAddress;
                         u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                         results.Results.Add(u);
                     }
@@ -833,6 +834,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 u.SamAaccount = ((IRole)usr).SamAaccount;
                                 u.GUID = ((IRole)usr).GUID;
                                 u.SID = ((IRole)usr).SID;
+                                u.EmailAddress = ((IRole)usr).EmailAddress;
                                 u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                                 nd.Results.Add(u);
                             }
@@ -902,6 +904,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         u.SamAaccount = ((IRole)usr).SamAaccount;
                         u.GUID = ((IRole)usr).GUID;
                         u.SID = ((IRole)usr).SID;
+                        u.EmailAddress = ((IRole)usr).EmailAddress;
                         u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                         results.Results.Add(u);
                     }
@@ -967,6 +970,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 u.SamAaccount = ((IRole)usr).SamAaccount;
                                 u.GUID = ((IRole)usr).GUID;
                                 u.SID = ((IRole)usr).SID;
+                                u.EmailAddress = ((IRole)usr).EmailAddress;
                                 u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                                 nd.Results.Add(u);
                             }
@@ -1028,6 +1032,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         u.SamAaccount = ((IRole)usr).SamAaccount;
                         u.GUID = ((IRole)usr).GUID;
                         u.SID = ((IRole)usr).SID;
+                        u.EmailAddress = ((IRole)usr).EmailAddress;
                         u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                         resolved.Results.Add(u);
                     }
@@ -1076,6 +1081,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 u.SamAaccount = ((IRole)usr).SamAaccount;
                                 u.GUID = ((IRole)usr).GUID;
                                 u.SID = ((IRole)usr).SID;
+                                u.EmailAddress = ((IRole)usr).EmailAddress;
                                 u.IsSecurityGroup = ((IRole)usr).IsSecurityGroup;
                                 resolved.Results.Add(u);
                             }
@@ -1207,7 +1213,31 @@ namespace SharePoint.IdentityService.ActiveDirectory
             get { return _claimsmode; }
             set { _claimsmode = value; }
         }
-        
+
+        /// <summary>
+        /// IsWindows property implementation
+        /// </summary>
+        public bool IsWindows
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        public ProxyClaimsIdentityMode ClaimIdentityMode
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        public ProxyClaimsRoleMode ClaimRoleMode
+        {
+            get; set;
+        }
+
         /// <summary>
         /// ClaimsDisplayMode  property implemtation
         /// </summary>
@@ -1336,6 +1366,18 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 else if (p.ParamName.ToLower().Trim().Equals("claimsmode"))
                 {
                     _adprm.ClaimsMode = (ProxyClaimsMode)Enum.Parse(typeof(ProxyClaimsMode), p.ParamValue);
+                    if (_adprm.ClaimsMode == ProxyClaimsMode.Windows)
+                        _adprm.IsWindows = true;
+                    else
+                        _adprm.IsWindows = false;
+                }
+                else if (p.ParamName.ToLower().Trim().Equals("claimidentitymode"))
+                {
+                    _adprm.ClaimIdentityMode = (ProxyClaimsIdentityMode)Enum.Parse(typeof(ProxyClaimsIdentityMode), p.ParamValue);
+                }
+                else if (p.ParamName.ToLower().Trim().Equals("claimrolemode"))
+                {
+                    _adprm.ClaimRoleMode = (ProxyClaimsRoleMode)Enum.Parse(typeof(ProxyClaimsRoleMode), p.ParamValue);
                 }
                 else if (p.ParamName.ToLower().Trim().Equals("claimsdisplaymode"))
                 {
@@ -1789,6 +1831,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
         private void LoadDomains()
         {
             this.RootDomains.Clear();
+            this.BadDomains.Clear();
             DateTime db = DateTime.Now;
             bool rootit = false;
             using (Identity impersonate = Identity.Impersonate(_aduser, _adpwd))
@@ -1801,7 +1844,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 Forest f = Forest.GetForest(dctx);
                 try
                 {
-                    LogEvent.Trace(string.Format(ResourcesValues.GetString("E1000"), this.ProviderName), System.Diagnostics.EventLogEntryType.Information, 1000);
+                    LogEvent.DebugTrace(string.Format(ResourcesValues.GetString("E1000"), this.ProviderName)+" On Forest : "+f.Name, System.Diagnostics.EventLogEntryType.Information);
                     foreach (Domain d in f.Domains)
                     {
                         try
@@ -1813,18 +1856,43 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 {
                                     if (prm.Enabled)
                                     {
-                                        ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, internalGetTopLevelNames(), prm, this.GlobalParams);
-                                        this.RootDomains.Add(r);
-                                        r.IsRoot = true;
-                                        LoadChildDomainList(r, d);
+                                        LogEvent.DebugTrace(string.Format("Domain {0} {1} {2} is a Root Domain", d.Name, prm.DnsName, prm.ConnectString), System.Diagnostics.EventLogEntryType.Information);
+                                        try
+                                        {
+
+                                            ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, internalGetTopLevelNames(), prm, this.GlobalParams);
+                                            lock (lokobj)
+                                            {
+
+                                                if (CanAddRootDomain(r))
+                                                {
+                                                    LogEvent.DebugTrace(string.Format("This root domain {0} {1} {2} Added to Effective domain list", d.Name, prm.DnsName, prm.ConnectString), System.Diagnostics.EventLogEntryType.Information);
+                                                    this.RootDomains.Add(r);
+                                                    r.IsRoot = true;
+                                                    LoadChildDomainList(r, d);
+                                                }
+                                                else
+                                                    LogEvent.DebugTrace(string.Format("This root domain {0} {1} {2} Exists", d.Name, prm.DnsName, prm.ConnectString), System.Diagnostics.EventLogEntryType.Warning);
+                                            }
+                                        }
+                                        catch (Exception E)
+                                        {
+                                            LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} as errors {1}", d.Name, E.Message), System.Diagnostics.EventLogEntryType.Error);
+                                            this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, E.Message, DateTime.Now.Subtract(db)));
+                                            throw E;
+                                        }
                                     }
                                     else
+                                    {
+                                        LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} is administratively Disabled ", d.Name), System.Diagnostics.EventLogEntryType.Warning);
                                         this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This root domain {0} is administratively Disabled ", d), DateTime.Now.Subtract(db)));
+                                    }
                                 }
                             }
                         }
                         catch (Exception e)
                         {
+                            LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} as errors {1}", d.Name, e.Message), System.Diagnostics.EventLogEntryType.Error);
                             LogEvent.Log(e, ResourcesValues.GetString("E1501"), System.Diagnostics.EventLogEntryType.Error, 1501);
                             this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This domain {0} caused an error ", d), DateTime.Now.Subtract(db)));
                         }
@@ -1839,6 +1907,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                             {
                                 if (!prmx.Enabled)
                                 {
+                                    LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} is administratively Disabled ", prmx.DnsName), System.Diagnostics.EventLogEntryType.Warning);
                                     this.BadDomains.Add(new ActiveDirectoryBadDomain(i.TargetName, string.Format("This domain {0} is administratively Disabled ", i.TargetName), DateTime.Now.Subtract(db)));
                                     continue;
                                 }
@@ -1853,10 +1922,12 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                     {
                                         countforest++;
                                     }
+                                    LogEvent.DebugTrace(string.Format("Starting Loading Domain {0} {1} {2} ", i.TargetName, prmx.DnsName, prmx.ConnectString), System.Diagnostics.EventLogEntryType.Information);
                                     ThreadPool.QueueUserWorkItem(new WaitCallback(InternalLoadForest), new ActiveDirectoryForestLoadState(i.TargetName, relationshipsGetTopLevelNames(i)));
                                 }
                                 catch (Exception E)
                                 {
+                                    LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} as errors {1}", prmx.DnsName, E.Message), System.Diagnostics.EventLogEntryType.Error);
                                     LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1001"), i.TargetName), System.Diagnostics.EventLogEntryType.Error, 1001);
                                 }
                             }
@@ -1864,6 +1935,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                     catch (Exception E)
                     {
+                        LogEvent.DebugTrace(string.Format("errors {0}", E.Message), System.Diagnostics.EventLogEntryType.Error);
                         LogEvent.Log(E, ResourcesValues.GetString("E1501"), System.Diagnostics.EventLogEntryType.Error, 1501);
                     }
                     if (rootit)
@@ -1875,6 +1947,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 catch (Exception E)
                 {
                     _isloaded = false;
+                    LogEvent.DebugTrace(string.Format("errors {0}", E.Message), System.Diagnostics.EventLogEntryType.Error);
                     LogEvent.Log(E, ResourcesValues.GetString("E1500"), System.Diagnostics.EventLogEntryType.Error, 1500);
                 }
                 finally
@@ -1907,9 +1980,11 @@ namespace SharePoint.IdentityService.ActiveDirectory
                 }
                 catch (Exception E)
                 {
+                    LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} as errors {1}", ff.Name, E.Message), System.Diagnostics.EventLogEntryType.Error);
                     this.BadDomains.Add(new ActiveDirectoryBadDomain(data.ForestName, E.Message, DateTime.Now.Subtract(db)));
                     throw E;
                 }
+                LogEvent.DebugTrace(string.Format(ResourcesValues.GetString("E1000"), this.ProviderName) + " On Forest : " + ff.Name, System.Diagnostics.EventLogEntryType.Information);
                 foreach (Domain d in ff.Domains)
                 {
                     if (d.Parent == null)
@@ -1919,29 +1994,42 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         {
                             if (prm.Enabled)
                             {
-                                ActiveDirectoryRootDomain r = null;
+                                LogEvent.DebugTrace(string.Format("Domain {0} is a Root Domain", d.Name), System.Diagnostics.EventLogEntryType.Information);
                                 try
                                 {
-
-                                    r = new ActiveDirectoryRootDomain(d, data.TopLevelNames, prm, this.GlobalParams);
-                                    this.RootDomains.Add(r);
-                                    r.IsRoot = true;
-                                    LoadChildDomainList(r, d);
+                                    ActiveDirectoryRootDomain r = new ActiveDirectoryRootDomain(d, data.TopLevelNames, prm, this.GlobalParams);
+                                    lock (lokobj)
+                                    {
+                                        if (CanAddRootDomain(r))
+                                        {
+                                            LogEvent.DebugTrace(string.Format("This root domain {0} {1} {2} Added to Effective domain list", d.Name, prm.DnsName, prm.ConnectString), System.Diagnostics.EventLogEntryType.Information);
+                                            this.RootDomains.Add(r);
+                                            r.IsRoot = true;
+                                            LoadChildDomainList(r, d);
+                                        }
+                                        else
+                                            LogEvent.DebugTrace(string.Format("This root domain {0} {1} {2}  Exists", d.Name, prm.DnsName, prm.ConnectString), System.Diagnostics.EventLogEntryType.Warning);
+                                    }
                                 }
                                 catch (Exception E)
                                 {
+                                    LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} as errors {1}", d.Name, E.Message), System.Diagnostics.EventLogEntryType.Error);
                                     this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, E.Message, DateTime.Now.Subtract(db)));
                                     throw E;
                                 }
                             }
                             else
+                            {
+                                LogEvent.DebugTrace(string.Format("Added to BAD / This root domain {0} is administratively Disabled ", d.Name), System.Diagnostics.EventLogEntryType.Warning);
                                 this.BadDomains.Add(new ActiveDirectoryBadDomain(d.Name, string.Format("This domain {0} is administratively Disabled ", d.Name), DateTime.Now.Subtract(db)));
+                            }
                         }
                     }
                 }
             }
             catch (Exception E)
             {
+                LogEvent.DebugTrace(string.Format(ResourcesValues.GetString("E1200"), data.ForestName), System.Diagnostics.EventLogEntryType.Error);
                 LogEvent.Log(E, string.Format(ResourcesValues.GetString("E1200"), data.ForestName), System.Diagnostics.EventLogEntryType.Error, 1200);
             }
             finally
@@ -1955,6 +2043,27 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// CanAddRootDomain method implmentation
+        /// </summary>
+        private bool CanAddRootDomain(ActiveDirectoryRootDomain dom)
+        {
+            foreach (ActiveDirectoryRootDomain rt in this.RootDomains)
+            {
+                if (!(string.IsNullOrEmpty(rt.ConnectString) && string.IsNullOrEmpty(rt.DnsName)))
+                {
+                    if ((rt.DnsName.ToLower().Equals(dom.DnsName.ToLower())) && (rt.ConnectString.ToLower().Equals(dom.ConnectString.ToLower())))
+                        return false;
+                }
+                else if (!string.IsNullOrEmpty(rt.DnsName))
+                {
+                    if (rt.DnsName.ToLower().Equals(dom.DnsName.ToLower())) 
+                        return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
@@ -2686,7 +2795,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         {
                             ResultPropertyValueCollection dns = sr.Properties["dnsRoot"];
                             string dnsroot = dns[0].ToString();
-                            if (dnsroot.ToLowerInvariant().Equals(dnsname))
+                            if (dnsroot.ToLowerInvariant().Equals(dnsname.ToLowerInvariant()))
                             {
                                 ResultPropertyValueCollection rpvc = sr.Properties["nETBIOSName"];
                                 netbiosName = rpvc[0].ToString();
@@ -2850,18 +2959,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
         public string ConnectString
         {
             get { return _connecstring; }
-            internal set 
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    if (value.ToLower().StartsWith("ldap://"))
-                        _connecstring = "LDAP://" + value.Substring(7);
-                    else
-                        _connecstring = value;
-                }
-                else
-                    _connecstring = value;
-            }
+            internal set { _connecstring = value; }
         }
 
         /// <summary>
@@ -2889,6 +2987,7 @@ namespace SharePoint.IdentityService.ActiveDirectory
             src.PropertiesToLoad.Add("sAMAccountName");
             src.PropertiesToLoad.Add("objectGuid");
             src.PropertiesToLoad.Add("objectSid");
+            src.PropertiesToLoad.Add("mail");
             src.PropertiesToLoad.Add("groupType");
         }
 
@@ -2977,10 +3076,14 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         if (inspect.IsSID())
                             grpldap += "(objectSid=" + inspect.Pattern + ")";
                         else
+                        {
                             if (!string.IsNullOrEmpty(inspect.UserNamePart))
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.UserNamePart + endstar + ")";
                             else
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.Pattern + endstar + ")";
+                            if (this.GlobalParams.SearchByMail)
+                                grpldap += "(mail=" + leadstar + searchPattern + endstar + ")";
+                        }
                         grpldap += ")";
                         try
                         {
@@ -3147,10 +3250,12 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         if (inspect.IsSID())
                             grpldap += "(objectSid=" + inspect.Pattern + ")";
                         else
+                        {
                             if (!string.IsNullOrEmpty(inspect.UserNamePart))
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.UserNamePart + endstar + ")";
                             else
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.Pattern + endstar + ")";
+                        }
                         grpldap += ")";
                         try
                         {
@@ -3221,14 +3326,19 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     try
                     {
                         string qryldap = "(&(objectCategory=user)(objectClass=user)(|";
-                        if (inspect.IsUPNForm())
-                            qryldap += "(userprincipalname=" + leadstar + inspect.Pattern + endstar + ")";
-                        if (inspect.IsSAMForm() || inspect.IsAllOptions())
+                        if (this.GlobalParams.IsWindows)
+                        {
                             qryldap += "(sAMAccountName=" + leadstar + inspect.UserNamePart + endstar + ")";
-                        if (this.GlobalParams.SearchByDisplayName)
-                            qryldap += "(displayName=" + leadstar + searchPattern + endstar + ")";
-                        if (this.GlobalParams.SearchByMail)
-                            qryldap += "(mail=" + leadstar + searchPattern + endstar + ")";
+                        }
+                        else
+                        {
+                            if (this.GlobalParams.ClaimIdentityMode==ProxyClaimsIdentityMode.UserPrincipalName)
+                                qryldap += "(userprincipalname=" + leadstar + inspect.Pattern + endstar + ")";
+                            else if (this.GlobalParams.ClaimIdentityMode == ProxyClaimsIdentityMode.SAMAccount)
+                                qryldap += "(sAMAccountName=" + leadstar + inspect.UserNamePart + endstar + ")";
+                            else if (this.GlobalParams.ClaimIdentityMode == ProxyClaimsIdentityMode.Email)
+                                qryldap += "(mail=" + leadstar + searchPattern + endstar + ")";
+                        }
 #if enabledonly
                         qryldap += ")(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
 #endif
@@ -3413,10 +3523,20 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     bool trusted = CheckDomain(inspect);
 
                     // Load Groups if needed
-                    if (inspect.IsSID())
+                    if (inspect.IsSAMForm() || inspect.IsAllOptions() || inspect.IsSID())
                     {
                         string grpldap = "(&(objectClass=group)";
-                        grpldap += "(objectSid=" + inspect.Pattern + ")";
+                        if (this.GlobalParams.IsWindows)
+                        {
+                            grpldap += "(objectSid=" + inspect.Pattern + ")";
+                        }
+                        else
+                        {
+                            if (this.GlobalParams.ClaimRoleMode == ProxyClaimsRoleMode.SID)
+                                grpldap += "(objectSid=" + inspect.Pattern + ")";
+                            else
+                                grpldap += "(sAMAccountName=" + inspect.Pattern + ")";
+                         }
                         grpldap += ")";
                         try
                         {
@@ -3462,10 +3582,19 @@ namespace SharePoint.IdentityService.ActiveDirectory
                         try
                         {
                             string qryldap = "(&(objectCategory=user)(objectClass=user)(|";
-                            if (inspect.IsUPNForm())
-                                qryldap += "(userprincipalname=" + inspect.Pattern + ")";
-                            if (inspect.IsSAMForm())
+                            if (this.GlobalParams.IsWindows)
+                            {
                                 qryldap += "(sAMAccountName=" + inspect.UserNamePart + ")";
+                            }
+                            else
+                            {
+                                if (this.GlobalParams.ClaimIdentityMode == ProxyClaimsIdentityMode.UserPrincipalName)
+                                    qryldap += "(userprincipalname=" + inspect.Pattern + ")";
+                                else if (this.GlobalParams.ClaimIdentityMode == ProxyClaimsIdentityMode.SAMAccount)
+                                    qryldap += "(sAMAccountName=" + inspect.UserNamePart + ")";
+                                else if (this.GlobalParams.ClaimIdentityMode == ProxyClaimsIdentityMode.Email)
+                                    qryldap += "(mail=" + searchPattern + ")";
+                            }
 #if enabledonly
                             qryldap += ")(!(userAccountControl:1.2.840.113556.1.4.803:=2))";
 #endif
@@ -4019,10 +4148,16 @@ namespace SharePoint.IdentityService.ActiveDirectory
                     GUID = new Guid((byte[])DirEntry.Properties["objectGuid"].Value);
                     SID = ConvertSidToString((byte[])DirEntry.Properties["objectSid"].Value);
                     int grptype = (int)DirEntry.Properties["groupType"].Value;
-                    if (DirEntry.Properties["displayName"].Value == null)
-                        DisplayName = DirEntry.Properties["sAMAccountName"].Value.ToString();
-                    else
+
+                    if ((DirEntry.Properties.Contains("displayName")) && (DirEntry.Properties["displayName"].Value != null))
                         DisplayName = DirEntry.Properties["displayName"].Value.ToString();
+                    else
+                        DisplayName = DirEntry.Properties["sAMAccountName"].Value.ToString();
+
+                    if ((DirEntry.Properties.Contains("mail")) && (DirEntry.Properties["mail"].Value != null))
+                        EmailAddress = DirEntry.Properties["mail"].Value.ToString();
+                    else
+                        EmailAddress = string.Empty;
                     IsBuiltIn = false;
                     switch (grptype)
                     {
@@ -4092,6 +4227,12 @@ namespace SharePoint.IdentityService.ActiveDirectory
         /// SID property implementation
         /// </summary>
         public string SID { get; set; }
+
+        /// <summary>
+        /// EmailAddress property implementation
+        /// </summary>
+        public string EmailAddress { get; set; }
+
     }
     #endregion
 }

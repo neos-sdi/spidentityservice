@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -115,6 +115,7 @@ namespace SharePoint.IdentityService.PowerShell
     internal sealed class NewIdentityServiceApplication : SPCmdlet
     {
         private string m_Name;
+        private string m_claimProviderName;
         private string m_DatabaseName = "IdentityServiceDatabase";
         private string m_DatabaseServer;
         private string m_FailoverDatabaseServer;
@@ -137,6 +138,14 @@ namespace SharePoint.IdentityService.PowerShell
         {
             get { return m_Name; }
             set { m_Name = value; }
+        }
+
+        [Parameter(Mandatory = true, Position = 1)]
+        [ValidateNotNullOrEmpty]
+        public string ClaimProviderName
+        {
+            get { return m_claimProviderName; }
+            set { m_claimProviderName = value; }
         }
 
         [Parameter(Mandatory = true)]
@@ -204,7 +213,7 @@ namespace SharePoint.IdentityService.PowerShell
                 WriteError(new InvalidOperationException("The specified application pool could not be found."), ErrorCategory.InvalidArgument, this);
                 SkipProcessCurrentRecord();
             }
-            this.WriteObject(Utilities.CreateServiceApplicationAndProxy(ShouldProcess(this.Name), this.Name, applicationPool, this.DatabaseName, this.DatabaseServer, this.FailoverDatabaseServer, (null == this.DatabaseCredentials ? null : this.DatabaseCredentials.GetNetworkCredential()),  (this.m_resolvedb.IsPresent), this.m_useexistingdb.IsPresent));
+            this.WriteObject(Utilities.CreateServiceApplicationAndProxy(ShouldProcess(this.Name), this.Name, applicationPool, this.DatabaseName, this.DatabaseServer, this.FailoverDatabaseServer, (null == this.DatabaseCredentials ? null : this.DatabaseCredentials.GetNetworkCredential()),  (this.m_resolvedb.IsPresent), this.m_useexistingdb.IsPresent, this.ClaimProviderName ));
         }
     }
 

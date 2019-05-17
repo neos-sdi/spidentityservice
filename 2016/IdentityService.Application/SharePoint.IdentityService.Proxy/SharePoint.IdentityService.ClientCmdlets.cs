@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -33,6 +33,7 @@ namespace SharePoint.IdentityService.PowerShell
         private const string ServiceApplicationParameterSetName = "ServiceApplication";
 
         private string m_Name;
+        private string m_ClaimProviderName;
         private Uri m_Uri;
         private SPServiceApplicationPipeBind m_ServiceApplicationPipeBind;
 
@@ -45,6 +46,17 @@ namespace SharePoint.IdentityService.PowerShell
         {
             get { return m_Name; }
             set { m_Name = value; }
+        }
+
+        /// <summary>
+        /// ClaimProviderName property implementation
+        /// </summary>
+        [Parameter(Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string ClaimProviderName
+        {
+            get { return m_ClaimProviderName; }
+            set { m_ClaimProviderName = value; }
         }
 
         /// <summary>
@@ -91,7 +103,7 @@ namespace SharePoint.IdentityService.PowerShell
             {
                 ThrowTerminatingError(new InvalidOperationException("Identity Web Service proxy not found."), ErrorCategory.ResourceUnavailable, this);
             }
-            ServiceApplicationProxy existingServiceApplicationProxy = serviceProxy.ApplicationProxies.GetValue<ServiceApplicationProxy>();
+            IdentityServiceApplicationProxy existingServiceApplicationProxy = serviceProxy.ApplicationProxies.GetValue<IdentityServiceApplicationProxy>();
             if (null != existingServiceApplicationProxy)
             {
                 WriteError(new InvalidOperationException("Identity Web service application proxy exists."), ErrorCategory.ResourceExists, existingServiceApplicationProxy);
@@ -124,7 +136,7 @@ namespace SharePoint.IdentityService.PowerShell
             }
             if((null!=serviceApplicationUri) && (ShouldProcess(this.Name)))
             {
-                ServiceApplicationProxy serviceApplicationProxy = new ServiceApplicationProxy(this.Name, serviceProxy, serviceApplicationUri);
+                IdentityServiceApplicationProxy serviceApplicationProxy = new IdentityServiceApplicationProxy(this.Name, serviceProxy, serviceApplicationUri, this.ClaimProviderName);
                 serviceApplicationProxy.Provision();
                 WriteObject(serviceApplicationProxy);
             }

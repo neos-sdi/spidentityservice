@@ -45,6 +45,31 @@ namespace SharePoint.IdentityService.LDAP
         }
 
         /// <summary>
+        /// IsWindows property implementation
+        /// </summary>
+        public bool IsWindows
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        public ProxyClaimsIdentityMode ClaimIdentityMode
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// IdentityClaim property implementation
+        /// </summary>
+        public ProxyClaimsRoleMode ClaimRoleMode
+        {
+            get; set;
+        }
+
+
+        /// <summary>
         /// ClaimsDisplayMode  property implemtation
         /// </summary>
         public ProxyClaimsDisplayMode ClaimsDisplayMode

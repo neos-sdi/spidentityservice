@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -14,11 +14,8 @@
 //******************************************************************************************************************************************************************************************//
 namespace SharePoint.IdentityService
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
     using Microsoft.SharePoint.Administration;
+    using System;
 
     [System.Runtime.InteropServices.Guid("AD0A2AF6-925D-404C-A5EB-CC69951B13CA")]
     public sealed class AdministrationService : SPIisWebService, IServiceAdministration
@@ -100,10 +97,10 @@ namespace SharePoint.IdentityService
             {
                 throw new InvalidOperationException("SharePoint.IdentityServiceProxy doesn't exist in the farm");
             }
-            ServiceApplicationProxy applicationProxy = serviceProxy.ApplicationProxies.GetValue<ServiceApplicationProxy>(name);
+            IdentityServiceApplicationProxy applicationProxy = serviceProxy.ApplicationProxies.GetValue<IdentityServiceApplicationProxy>(name);
             if (null == applicationProxy)
             {
-                applicationProxy = new ServiceApplicationProxy(name, serviceProxy, ((IdentityServiceApplication)serviceApplication).Uri);
+                applicationProxy = new IdentityServiceApplicationProxy(name, serviceProxy, ((IdentityServiceApplication)serviceApplication).Uri, serviceProxy.ClaimProviderName);
             }
             return applicationProxy;
         }

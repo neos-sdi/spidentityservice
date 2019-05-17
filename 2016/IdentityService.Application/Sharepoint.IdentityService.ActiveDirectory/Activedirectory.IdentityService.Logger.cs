@@ -1,5 +1,5 @@
 //******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                       
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //                       
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -93,7 +93,43 @@ namespace SharePoint.IdentityService.ActiveDirectory
             {
             }
         }
-	}
+
+        /// <summary>
+        /// Trace method implementation
+        /// </summary>
+        public static void DebugTrace(string message, EventLogEntryType eventLogEntryType)
+        {
+            try
+            {
+                //using (Identity impersonate = Identity.ImpersonateAdmin()) 
+                SPSecurity.RunWithElevatedPrivileges(delegate ()
+                {
+                    switch (eventLogEntryType)
+                    {
+                        case EventLogEntryType.Error:
+                            System.Diagnostics.Trace.Indent();
+                            System.Diagnostics.Trace.TraceError(message);
+                            System.Diagnostics.Trace.Unindent();
+                            break;
+                        case EventLogEntryType.Warning:
+                            System.Diagnostics.Trace.Indent();
+                            System.Diagnostics.Trace.TraceWarning(message);
+                            System.Diagnostics.Trace.Unindent();
+                            break;
+                        case EventLogEntryType.Information:
+                            System.Diagnostics.Trace.Indent();
+                            System.Diagnostics.Trace.TraceInformation(message);
+                            System.Diagnostics.Trace.Unindent();
+                            break;
+                    }
+                }
+                );
+            }
+            catch
+            {
+            }
+        }
+    }
 
     internal static class ResourcesValues
     {

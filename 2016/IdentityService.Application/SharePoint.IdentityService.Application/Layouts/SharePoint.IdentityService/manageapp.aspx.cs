@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -72,9 +72,9 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                 {
                     foreach (SPServiceApplicationProxy prxy in serviceProxy.ApplicationProxies)
                     {
-                        if (prxy is ServiceApplicationProxy)
+                        if (prxy is IdentityServiceApplicationProxy)
                         {
-                            if (CheckApplicationProxy(ServiceApplication, prxy as ServiceApplicationProxy))
+                            if (CheckApplicationProxy(ServiceApplication, prxy as IdentityServiceApplicationProxy))
                             {
                                 if (clearcache)
                                 {
@@ -83,7 +83,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                                         IdentityServiceApplication app = srv.ServiceInstances.GetValue<IdentityServiceApplication>(new Guid(this.GetID()));
                                         if ((app != null) && (app.Status == SPObjectStatus.Online))
                                         {
-                                            ((ServiceApplicationProxy)prxy).LaunchClearCacheCommand(srv.Name);  // Only on one valid Server
+                                            ((IdentityServiceApplicationProxy)prxy).LaunchClearCacheCommand(srv.Name);  // Only on one valid Server
                                             break;
                                         }
                                     }
@@ -94,7 +94,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
                                     {
                                         IdentityServiceApplication app = srv.ServiceInstances.GetValue<IdentityServiceApplication>(new Guid(this.GetID()));
                                         if ((app != null) && (app.Status == SPObjectStatus.Online))
-                                            ((ServiceApplicationProxy)prxy).LaunchReloadCommand(srv.Name);   // On Each Servers
+                                            ((IdentityServiceApplicationProxy)prxy).LaunchReloadCommand(srv.Name);   // On Each Servers
                                     }
                                 }
                             }
@@ -111,7 +111,7 @@ namespace SharePoint.IdentityService.AdminLayoutPages
         /// <summary>
         /// CheckApplicationProxy metho implementation
         /// </summary>
-        private bool CheckApplicationProxy(IdentityServiceApplication app, ServiceApplicationProxy prxy)
+        private bool CheckApplicationProxy(IdentityServiceApplication app, IdentityServiceApplicationProxy prxy)
         {
             bool result = false;
             try

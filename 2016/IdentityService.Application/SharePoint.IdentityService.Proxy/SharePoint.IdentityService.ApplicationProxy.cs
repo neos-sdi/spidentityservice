@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -32,26 +32,54 @@ namespace SharePoint.IdentityService
 
     [IisWebServiceApplicationProxyBackupBehavior]
     [Guid("EDF76E21-FBA9-404C-B414-A4380D818169")]
-    public sealed class ServiceApplicationProxy : SPIisWebServiceApplicationProxy
+    public sealed class IdentityServiceApplicationProxy : SPIisWebServiceApplicationProxy
     {
         [Persisted]
         private SPServiceLoadBalancer m_LoadBalancer;
+
+        [Persisted]
+        private string m_claimProviderName;
 
         // Used to cache the client channel factory
         private string m_EndpointConfigurationName;
         private ChannelFactory<IIdentityServiceContract> m_ChannelFactory;
         private object m_ChannelFactoryLock = new object();
 
-        public ServiceApplicationProxy()
+        /// <summary>
+        /// ServiceApplicationProxy constructor
+        /// </summary>
+        public IdentityServiceApplicationProxy()
         {
         }
 
-        public ServiceApplicationProxy(string name, IdentityServiceProxy serviceProxy, Uri serviceApplicationAddress) : base(name, serviceProxy, serviceApplicationAddress)
+        /// <summary>
+        /// ServiceApplicationProxy constructor
+        /// </summary>
+       /* public IdentityServiceApplicationProxy(string name, IdentityServiceProxy serviceProxy, Uri serviceApplicationAddress) : base(name, serviceProxy, serviceApplicationAddress)
         {
             m_LoadBalancer = new SPRoundRobinServiceLoadBalancer(serviceApplicationAddress);
-        }
+        } */
+
+        /// <summary>
+        /// ServiceApplicationProxy constructor
+        /// </summary>
+        public IdentityServiceApplicationProxy(string name, IdentityServiceProxy serviceProxy, Uri serviceApplicationAddress, string claimprovidername) : base(name, serviceProxy, serviceApplicationAddress)
+        {
+            m_LoadBalancer = new SPRoundRobinServiceLoadBalancer(serviceApplicationAddress);
+            m_claimProviderName = ClaimProviderNameHeader.GetClaimProviderInternalName(claimprovidername);
+        } 
 
         #region Display Values
+
+        /// <summary>
+        /// ClaimProviderName property implementation
+        /// </summary>
+        public string ClaimProviderName
+        {
+            get { return m_claimProviderName; }
+            set { m_claimProviderName = ClaimProviderNameHeader.GetClaimProviderInternalName(value); }
+        }
+
         /// <summary>
         /// TypeName property implementation
         /// </summary>
@@ -308,19 +336,19 @@ namespace SharePoint.IdentityService
 
         #region Execution Procedures
 
-        internal delegate void CodeToRunOnApplicationProxy(ServiceApplicationProxy applicationProxy);
+        internal delegate void CodeToRunOnApplicationProxy(IdentityServiceApplicationProxy applicationProxy);
         private delegate void CodeToRunOnChannel(IIdentityServiceContract serviceContract);
 
         /// <summary>
         /// GetProxy method implementation
         /// </summary>
-        public static ServiceApplicationProxy GetProxy(SPServiceContext serviceContext)
+        public static IdentityServiceApplicationProxy GetProxy(SPServiceContext serviceContext)
         {
             if (serviceContext == null)
             {
                 throw new ArgumentNullException("serviceContext");
             }
-            return (serviceContext.GetDefaultProxy(typeof(ServiceApplicationProxy)) as ServiceApplicationProxy);
+            return (serviceContext.GetDefaultProxy(typeof(IdentityServiceApplicationProxy)) as IdentityServiceApplicationProxy);
         }
 
 
@@ -333,7 +361,7 @@ namespace SharePoint.IdentityService
             {
                 throw new ArgumentNullException("serviceContext");
             }
-            ServiceApplicationProxy proxy = (ServiceApplicationProxy)serviceContext.GetDefaultProxy(typeof(ServiceApplicationProxy));
+            IdentityServiceApplicationProxy proxy = (IdentityServiceApplicationProxy)serviceContext.GetDefaultProxy(typeof(IdentityServiceApplicationProxy));
             if (null == proxy)
             {
                 throw new InvalidOperationException("SharePoint Identity Proxy not found.");

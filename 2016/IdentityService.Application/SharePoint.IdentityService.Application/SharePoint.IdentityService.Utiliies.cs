@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -249,7 +249,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CreateServiceApplicationAndProxy method implementation
         /// </summary>
-        public static IdentityServiceApplication CreateServiceApplicationAndProxy(bool shouldprocess, string name, SPIisWebServiceApplicationPool applicationPool, string dbname, string dbserver, string failover, NetworkCredential cred, bool resolvedb, bool useexitingdb)
+        public static IdentityServiceApplication CreateServiceApplicationAndProxy(bool shouldprocess, string name, SPIisWebServiceApplicationPool applicationPool, string dbname, string dbserver, string failover, NetworkCredential cred, bool resolvedb, bool useexitingdb, string claimprovidername)
         {
             if (string.IsNullOrEmpty(name))
                 name = "SharePoint Identity Service Application";
@@ -257,7 +257,7 @@ namespace SharePoint.IdentityService
             if (app != null)
             {
                 string prxyname = name + " Proxy";
-                CreateServiceProxy(shouldprocess, prxyname, app);
+                CreateServiceProxy(shouldprocess, prxyname, app, claimprovidername);
             }
             return app;
         }
@@ -320,7 +320,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CreateServiceProxy method implementation
         /// </summary>
-        public static ServiceApplicationProxy CreateServiceProxy(bool shouldprocess, string name, IdentityServiceApplication serviceApplication)
+        public static IdentityServiceApplicationProxy CreateServiceProxy(bool shouldprocess, string name, IdentityServiceApplication serviceApplication, string claimprovidername)
         {
             if (!shouldprocess)
                 return null;
@@ -342,10 +342,10 @@ namespace SharePoint.IdentityService
             }
 
             serviceApplicationUri = sharedServiceApplication.Uri;
-            ServiceApplicationProxy serviceApplicationProxy = null;
+            IdentityServiceApplicationProxy serviceApplicationProxy = null;
             if (null != serviceApplicationUri)
             {
-                serviceApplicationProxy = new ServiceApplicationProxy(name, serviceProxy, serviceApplicationUri);
+                serviceApplicationProxy = new IdentityServiceApplicationProxy(name, serviceProxy, serviceApplicationUri, claimprovidername);
                 serviceApplicationProxy.Provision();
                 SPServiceApplicationProxyGroup grp = serviceApplication.ServiceApplicationProxyGroup;
                 grp.Add(serviceApplicationProxy);
@@ -363,7 +363,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// UpdateServiceApplicationAndProxy method implementation
         /// </summary>
-        public static IdentityServiceApplication UpdateServiceApplicationAndProxy(bool shouldprocess, IdentityServiceApplication svcapp, string name, SPIisWebServiceApplicationPool applicationPool, string dbname, string dbserver, string failover, NetworkCredential cred, bool resolvedb, bool useexitingdb)
+        public static IdentityServiceApplication UpdateServiceApplicationAndProxy(bool shouldprocess, IdentityServiceApplication svcapp, string name, SPIisWebServiceApplicationPool applicationPool, string dbname, string dbserver, string failover, NetworkCredential cred, bool resolvedb, bool useexitingdb, string claimprovidername)
         {
             if (string.IsNullOrEmpty(name))
                 name = "SharePoint Identity Service Application";
@@ -374,7 +374,7 @@ namespace SharePoint.IdentityService
             if (app != null)
             {
                 string prxyname = name + " Proxy";
-                UpdateServiceProxy(shouldprocess, prxyname, app);
+                UpdateServiceProxy(shouldprocess, prxyname, app, claimprovidername);
                 app.UpgradeJobs();
             }
             return app;
@@ -460,7 +460,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CreateServiceProxy method implementation
         /// </summary>
-        public static ServiceApplicationProxy UpdateServiceProxy(bool shouldprocess, string name, IdentityServiceApplication serviceApplication)
+        public static IdentityServiceApplicationProxy UpdateServiceProxy(bool shouldprocess, string name, IdentityServiceApplication serviceApplication, string claimprovidername)
         {
             if (!shouldprocess)
                 return null;
@@ -475,7 +475,7 @@ namespace SharePoint.IdentityService
             {
                 throw new InvalidOperationException("SharePoint Identity Service Proxy not found.");
             }
-            ServiceApplicationProxy serviceApplicationProxy = GetApplicationProxy(serviceApplication, serviceProxy);
+            IdentityServiceApplicationProxy serviceApplicationProxy = GetApplicationProxy(serviceApplication, serviceProxy);
             if (null == serviceApplicationProxy)
             {
                 mustcreateproxy = true;
@@ -504,7 +504,7 @@ namespace SharePoint.IdentityService
             }
             else
             {
-                serviceApplicationProxy = CreateServiceProxy(shouldprocess, name, serviceApplication);
+                serviceApplicationProxy = CreateServiceProxy(shouldprocess, name, serviceApplication, claimprovidername);
             }
             return serviceApplicationProxy;
         }
@@ -583,7 +583,7 @@ namespace SharePoint.IdentityService
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>
-        public static ServiceApplicationProxy GetApplicationProxy(IdentityServiceApplication app, IdentityServiceProxy serviceProxy)
+        public static IdentityServiceApplicationProxy GetApplicationProxy(IdentityServiceApplication app, IdentityServiceProxy serviceProxy)
         {
             ArgumentValidator.IsNotNull(app, "ServiceApplication");
             ArgumentValidator.IsNotNull(app, "ServiceApplicationProxy");
@@ -591,11 +591,11 @@ namespace SharePoint.IdentityService
             {
                 foreach(SPServiceApplicationProxy prxy in serviceProxy.ApplicationProxies)
                 {
-                    if (prxy is ServiceApplicationProxy)
+                    if (prxy is IdentityServiceApplicationProxy)
                     {
-                        if (CheckApplicationProxy(app, prxy as ServiceApplicationProxy))
+                        if (CheckApplicationProxy(app, prxy as IdentityServiceApplicationProxy))
                         {
-                            return prxy as ServiceApplicationProxy;
+                            return prxy as IdentityServiceApplicationProxy;
                         }
                     }
                 }
@@ -606,7 +606,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CheckApplicationProxy metho implementation
         /// </summary>
-        private static bool CheckApplicationProxy(IdentityServiceApplication app, ServiceApplicationProxy prxy)
+        private static bool CheckApplicationProxy(IdentityServiceApplication app, IdentityServiceApplicationProxy prxy)
         {
             bool result = false;
             try
@@ -638,29 +638,6 @@ namespace SharePoint.IdentityService
         #endregion
 
         #region Claims Providers
-
-        /// <summary>
-        /// GetClaimProviderInternalName method implementation
-        /// </summary>
-        public static string GetClaimProviderInternalName(string value)
-        {
-            if (value.StartsWith(ClaimProviderNameHeader.Header))
-                return value;
-            else
-                return ClaimProviderNameHeader.Header + value;
-        }
-
-        /// <summary>
-        /// GetClaimProviderInternalName method implementation
-        /// </summary>
-        public static string GetClaimProviderName(string value)
-        {
-            if (value.StartsWith(ClaimProviderNameHeader.Header))
-                return value.Replace(ClaimProviderNameHeader.Header, "");
-            else
-                return value;
-        }
-
         /// <summary>
         /// CreateUpdateDeleteClaimProvider method implementation
         /// </summary>
@@ -722,7 +699,7 @@ namespace SharePoint.IdentityService
         /// </summary>
         private static void CreateUpdateTrustedClaimProvider(string applicationname, string trustedtokenissuer, string displayname, string desc, bool isusedbydefault,bool canupdate)
         {
-            string cpname = GetClaimProviderInternalName(trustedtokenissuer);
+            string cpname = Core.ClaimProviderNameHeader.GetClaimProviderInternalName(trustedtokenissuer);
             SPSecurity.RunWithElevatedPrivileges(delegate()
             {
                 if ((canupdate) || DoesClaimProviderExist(cpname))

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************************************************************************************************//
-// Copyright (c) 2015 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
+// Copyright (c) 2019 Neos-Sdi (http://www.neos-sdi.com)                                                                                                                                    //
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,   //
@@ -192,11 +192,11 @@ namespace SharePoint.IdentityService
                 {
                     foreach(SPServiceApplicationProxy prxy in serviceProxy.ApplicationProxies)
                     {
-                        if (prxy is ServiceApplicationProxy)
+                        if (prxy is IdentityServiceApplicationProxy)
                         {
-                            if (CheckApplicationProxy(ServiceApplication, prxy as ServiceApplicationProxy))
+                            if (CheckApplicationProxy(ServiceApplication, prxy as IdentityServiceApplicationProxy))
                             {
-                                ((ServiceApplicationProxy)prxy).LaunchStartCommand(Environment.MachineName);
+                                ((IdentityServiceApplicationProxy)prxy).LaunchStartCommand(Environment.MachineName);
                             }
                         }
                     }
@@ -211,7 +211,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CheckApplicationProxy metho implementation
         /// </summary>
-        private bool CheckApplicationProxy(IdentityServiceApplication app, ServiceApplicationProxy prxy)
+        private bool CheckApplicationProxy(IdentityServiceApplication app, IdentityServiceApplicationProxy prxy)
         {
             bool result = false;
             try
@@ -430,11 +430,11 @@ namespace SharePoint.IdentityService
                 {
                     foreach (SPServiceApplicationProxy prxy in serviceProxy.ApplicationProxies)
                     {
-                        if (prxy is ServiceApplicationProxy)
+                        if (prxy is IdentityServiceApplicationProxy)
                         {
-                            if (CheckApplicationProxy(ServiceApplication, prxy as ServiceApplicationProxy))
+                            if (CheckApplicationProxy(ServiceApplication, prxy as IdentityServiceApplicationProxy))
                             {
-                                ((ServiceApplicationProxy)prxy).LaunchReloadCommand(Environment.MachineName);
+                                ((IdentityServiceApplicationProxy)prxy).LaunchReloadCommand(Environment.MachineName);
                             }
                         }
                     }
@@ -449,7 +449,7 @@ namespace SharePoint.IdentityService
         /// <summary>
         /// CheckApplicationProxy metho implementation
         /// </summary>
-        private bool CheckApplicationProxy(IdentityServiceApplication app, ServiceApplicationProxy prxy)
+        private bool CheckApplicationProxy(IdentityServiceApplication app, IdentityServiceApplicationProxy prxy)
         {
             bool result = false;
             try
