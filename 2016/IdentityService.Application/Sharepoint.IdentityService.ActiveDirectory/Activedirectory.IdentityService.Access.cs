@@ -3081,8 +3081,8 @@ namespace SharePoint.IdentityService.ActiveDirectory
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.UserNamePart + endstar + ")";
                             else
                                 grpldap += "(sAMAccountName=" + leadstar + inspect.Pattern + endstar + ")";
-                            if (this.GlobalParams.SearchByMail)
-                                grpldap += "(mail=" + leadstar + searchPattern + endstar + ")";
+                          //  if (this.GlobalParams.SearchByMail)
+                          //      grpldap += "(mail=" + leadstar + searchPattern + endstar + ")";
                         }
                         grpldap += ")";
                         try
