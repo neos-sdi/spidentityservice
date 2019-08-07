@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="908bc5a0-55cd-4b10-b726-ec2ce32addf7" solutionId="908bc5a0-55cd-4b10-b726-ec2ce32addf7" resetWebServer="false" deploymentServerType="ApplicationServer" sharePointProductVersion="16.0" name="SearchFiles.Connector" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
+  <projectItems>
+    <projectItemReference itemId="ffe8ff91-59a1-4345-9cd1-55570be4a17e" />
+    <projectItemReference itemId="e93c5323-0830-4b2b-b0f6-ac0172f96612" />
+  </projectItems>
+</package>

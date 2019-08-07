@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<ps:Config
+    xmlns:ps="urn:Microsoft.SharePoint.PowerShell"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:Microsoft.SharePoint.PowerShell  SPCmdletSchema.xsd">
+  <ps:Assembly Name="SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=$SharePoint.Project.AssemblyPublicKeyToken$">
+    <ps:Cmdlet>
+      <ps:VerbName>Install-SearchFileConnector</ps:VerbName>
+      <ps:ClassName>SharePoint.Files.SearchConnector.PowerShell.InstallSearchFileConnector</ps:ClassName>
+      <ps:HelpFile>SharePoint.Files.SearchConnector.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+    <ps:Cmdlet>
+      <ps:VerbName>UnInstall-SearchFileConnector</ps:VerbName>
+      <ps:ClassName>SharePoint.Files.SearchConnector.PowerShell.UnInstallSearchFileConnector</ps:ClassName>
+      <ps:HelpFile>SharePoint.Files.SearchConnector.PowerShell.dll-help.xml</ps:HelpFile>
+    </ps:Cmdlet>
+  </ps:Assembly>
+</ps:Config>
+

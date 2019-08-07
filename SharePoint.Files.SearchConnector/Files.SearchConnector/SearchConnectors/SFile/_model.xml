@@ -1,0 +1,327 @@
+<?xml version="1.0"?>
+<Model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="SearchFile" xmlns="http://schemas.microsoft.com/windows/2007/BusinessDataCatalog">
+  <LobSystems>
+    <LobSystem Name="SearchFileSystem" Type="Custom" >
+      <Properties>
+        <Property Name="SystemUtilityTypeName" Type="System.String">SharePoint.Files.SearchConnector.SearchFileConnector, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9</Property>
+        <Property Name="InputUriProcessor" Type="System.String">SharePoint.Files.SearchConnector.SearchFileLobUri, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9</Property>
+        <Property Name="OutputUriProcessor" Type="System.String">SharePoint.Files.SearchConnector.SearchFileNamingContainer, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9</Property>
+      </Properties>
+      <LobSystemInstances>
+        <LobSystemInstance Name="SearchFileInstance" >
+          <Properties>
+            <Property Name="BatchDeepSize" Type="System.Int32">1024</Property>
+            <Property Name="ShowInSearchUI" Type="System.String">true</Property>
+          </Properties>
+        </LobSystemInstance>
+      </LobSystemInstances>
+      <Entities>
+        <Entity Name="SearchFolder" Namespace="SearchFileConnector" Version="1.0.0.0" EstimatedInstanceCount="1000" IsCached="true" >
+          <Identifiers>
+            <Identifier Name="PathID" TypeName="System.String" />
+          </Identifiers>
+          <Methods>
+            <Method Name="GetFolders" LobName="GetFolders" IsStatic="true">
+              <FilterDescriptors>
+                <FilterDescriptor Name="BatchingStateCookie"  Type="Batching">
+                  <Properties>
+                    <Property Name="BatchingCookie" Type="System.String" />
+                  </Properties>
+                </FilterDescriptor>
+                <FilterDescriptor  Name="HasMoreBatches" Type="BatchingTermination">
+                  <Properties>
+                    <Property  Name="CaseSensitive" Type="System.Boolean">false</Property>
+                    <Property  Name="Comparator" Type="System.String">!=</Property>
+                    <Property  Name="TerminationValue" Type="System.String">true</Property>
+                  </Properties>
+                </FilterDescriptor>
+              </FilterDescriptors>
+              <Parameters>
+                <Parameter Name="FolderPath" Direction="In">
+                  <TypeDescriptor
+                      Name="FolderPath"
+                      TypeName="System.String"
+                      IdentifierEntityNamespace="SearchFileConnector"
+                      IdentifierEntityName="SearchFolder"
+                      IdentifierName="PathID" />
+                     <!-- ForeignIdentifierAssociationName="GetFolderFiles"
+                      ForeignIdentifierAssociationEntityName="SearchFolder"
+                      ForeignIdentifierAssociationEntityNamespace="SearchFileConnector"/> -->
+                </Parameter>
+                <Parameter  Name="BatchingCookie" Direction="InOut">
+                  <TypeDescriptor  Name="BatchingCookieTypeDescriptor" TypeName="System.String" AssociatedFilter="BatchingStateCookie">
+                    <DefaultValues>
+                      <DefaultValue  MethodInstanceName="GetFolders" Type="System.String">0</DefaultValue>
+                    </DefaultValues>
+                  </TypeDescriptor>
+                </Parameter>
+                <Parameter  Name="HasMoreActivties" Direction="InOut">
+                  <TypeDescriptor Name="HasMoreActivtiesTypeDescriptor" TypeName="System.String" AssociatedFilter="HasMoreBatches">
+                    <DefaultValues>
+                      <DefaultValue  MethodInstanceName="GetFolders" Type="System.String">true</DefaultValue>
+                    </DefaultValues>
+                  </TypeDescriptor>
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor Name="Return" TypeName="SharePoint.Files.SearchConnector.SearchFolder[], SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9" IsCollection="true">
+                    <TypeDescriptors>
+                      <TypeDescriptor Name="Item" TypeName="SharePoint.Files.SearchConnector.SearchFolder, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9">
+                        <TypeDescriptors>
+                          <TypeDescriptor Name="Path" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFolder" IdentifierName="PathID" />
+                          <TypeDescriptor Name="Url" TypeName="System.String" />
+                          <TypeDescriptor Name="LastModified" TypeName="System.DateTime" >
+                            <Interpretation>
+                              <NormalizeDateTime LobDateTimeMode="Unspecified" />
+                            </Interpretation>
+                          </TypeDescriptor>
+                        </TypeDescriptors>
+                      </TypeDescriptor>
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Type="Finder" ReturnParameterName="Return" Default="true" Name="GetFolders" DefaultDisplayName="Read Root Folders List">
+                  <Properties>
+                    <Property Name="RootFinder" Type="System.String"></Property>
+                    <Property Name="UseClientCachingForSearch" Type="System.String"></Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                </MethodInstance>
+              </MethodInstances>
+            </Method>                    
+            <Method Name="GetFolder" LobName="GetFolder" IsStatic="true">
+              <Parameters>
+                <Parameter Name="folderPath" Direction="In">
+                  <TypeDescriptor Name="folderPath" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFolder" IdentifierName="PathID" />
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor Name="Return" TypeName="SharePoint.Files.SearchConnector.SearchFolder, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9">
+                    <TypeDescriptors>
+                      <TypeDescriptor Name="Name" TypeName="System.String" />
+                      <TypeDescriptor Name="Path" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFolder" IdentifierName="PathID" />
+                      <TypeDescriptor Name="LastModified" TypeName="System.DateTime" >
+                        <Interpretation>
+                          <NormalizeDateTime LobDateTimeMode="Unspecified" />
+                        </Interpretation>
+                      </TypeDescriptor>
+                      <TypeDescriptor Name="Url" TypeName="System.String" />
+                      <TypeDescriptor Name="UsesPluggableAuth" TypeName="System.Boolean" />
+                      <TypeDescriptor Name="SecurityDescriptor" TypeName="System.Byte[]" IsCollection="true">
+                        <TypeDescriptors>
+                          <TypeDescriptor Name="Item" TypeName="System.Byte" />
+                        </TypeDescriptors>
+                      </TypeDescriptor>
+                      <TypeDescriptor Name="docaclmeta" TypeName="System.String" />
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="GetFolder" Type="SpecificFinder" ReturnParameterName="Return" ReturnTypeDescriptorName="Return" ReturnTypeDescriptorLevel="0">
+                  <Properties>
+                    <Property Name="DisplayUriField" Type="System.String">Url</Property>
+                    <Property Name="UsesPluggableAuthentication" Type="System.String">UsesPluggableAuth</Property>
+                    <Property Name="WindowsSecurityDescriptorField" Type="System.String">SecurityDescriptor</Property>
+                    <Property Name="DocaclmetaField" Type="System.String">docaclmeta</Property>
+                    <Property Name="LastModifiedTimeStampField" Type="System.String">LastModified</Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                </MethodInstance>
+              </MethodInstances>
+            </Method>                
+            <Method Name="GetFolderFiles" LobName="GetFolderFiles" IsStatic="true">
+              <Parameters>
+                <Parameter Name="folderpath" Direction="In">
+                  <TypeDescriptor Name="folderpath" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFolder" IdentifierName="PathID" ForeignIdentifierAssociationName="GetFolderFiles" ForeignIdentifierAssociationEntityName="SearchFolder" ForeignIdentifierAssociationEntityNamespace="SearchFileConnector"/>
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor Name="Return" TypeName="SharePoint.Files.SearchConnector.SearchFile[], SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9" IsCollection="true">
+                    <TypeDescriptors>
+                      <TypeDescriptor Name="Item" TypeName="SharePoint.Files.SearchConnector.SearchFile, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9">
+                        <TypeDescriptors>
+                          <TypeDescriptor Name="Path" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFile" IdentifierName="PathID" />
+                          <TypeDescriptor Name="LastModified" TypeName="System.DateTime" >
+                            <Interpretation>
+                              <NormalizeDateTime LobDateTimeMode="Unspecified" />
+                            </Interpretation>
+                          </TypeDescriptor>
+                          <TypeDescriptor Name="Url" TypeName="System.String" />
+                          <TypeDescriptor Name="Extension" TypeName="System.String" />
+                          <TypeDescriptor Name="ContentType" TypeName="System.String" />
+                          <TypeDescriptor Name="UsesPluggableAuth" TypeName="System.Boolean" />
+                          <TypeDescriptor Name="SecurityDescriptor" TypeName="System.Byte[]" IsCollection="true">
+                            <TypeDescriptors>
+                              <TypeDescriptor Name="Item" TypeName="System.Byte" />
+                            </TypeDescriptors>
+                          </TypeDescriptor>
+                          <TypeDescriptor Name="docaclmeta" TypeName="System.String" />
+                        </TypeDescriptors>
+                      </TypeDescriptor>
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <Association Name="GetFolderFiles" Type="AssociationNavigator" ReturnParameterName="Return" ReturnTypeDescriptorName="Return">
+                  <Properties>
+                    <Property Name="UseClientCachingForSearch" Type="System.String"></Property>
+                    <Property Name="DirectoryLink" Type="System.String">x</Property>
+                    <Property Name="DisplayUriField" Type="System.String">Url</Property>
+                    <Property Name="LastModifiedTimeStampField" Type="System.String">LastModified</Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                  <SourceEntity Name="SearchFolder" Namespace="SearchFileConnector" />
+                  <DestinationEntity Name="SearchFile" Namespace="SearchFileConnector" />
+                </Association>
+              </MethodInstances>
+            </Method>
+          </Methods>
+        </Entity>      
+        <Entity Name="SearchFile" Namespace="SearchFileConnector" Version="1.0.0.0" EstimatedInstanceCount="1000" IsCached="true">
+          <Properties>
+            <Property Name="Title" Type="System.String">Name</Property>
+          </Properties>
+          <Identifiers>
+            <Identifier Name="PathID" TypeName="System.String" />
+          </Identifiers>
+          <Methods>
+            <Method Name="GetFiles" LobName="GetFiles" IsStatic="true">
+              <Parameters>
+                <Parameter Name="folderpath" Direction="In">
+                  <TypeDescriptor Name="folderpath" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFolder" IdentifierName="PathID" ForeignIdentifierAssociationName="GetFolderFiles" ForeignIdentifierAssociationEntityName="SearcFolder" ForeignIdentifierAssociationEntityNamespace="SearchFileConnector"/>
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor Name="Return" TypeName="SharePoint.Files.SearchConnector.SearchFile[], SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9" IsCollection="true">
+                    <TypeDescriptors>
+                      <TypeDescriptor Name="Item" TypeName="SharePoint.Files.SearchConnector.SearchFile, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9">
+                        <TypeDescriptors>
+                          <TypeDescriptor Name="Path" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFile" IdentifierName="PathID" />
+                          <TypeDescriptor Name="LastModified" TypeName="System.DateTime" >
+                            <Interpretation>
+                              <NormalizeDateTime LobDateTimeMode="Unspecified" />
+                            </Interpretation>
+                          </TypeDescriptor>
+                          <TypeDescriptor Name="Url" TypeName="System.String" />
+                          <TypeDescriptor Name="Extension" TypeName="System.String" />
+                          <TypeDescriptor Name="ContentType" TypeName="System.String" />
+                          <TypeDescriptor Name="UsesPluggableAuth" TypeName="System.Boolean" />
+                          <TypeDescriptor Name="SecurityDescriptor" TypeName="System.Byte[]" IsCollection="true">
+                            <TypeDescriptors>
+                              <TypeDescriptor Name="Item" TypeName="System.Byte" />
+                            </TypeDescriptors>
+                          </TypeDescriptor>
+                          <TypeDescriptor Name="docaclmeta" TypeName="System.String" />
+                        </TypeDescriptors>
+                      </TypeDescriptor>
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="GetFiles" Type="Finder" ReturnParameterName="Return" ReturnTypeDescriptorName="Return" ReturnTypeDescriptorLevel="0">
+                  <Properties>
+                    <Property Name="RootFinder" Type="System.String"></Property>
+                    <Property Name="UseClientCachingForSearch" Type="System.String"></Property> 
+                    <Property Name="LastModifiedTimeStampField" Type="System.String">LastModified</Property>
+                    <Property Name="DisplayUriField" Type="System.String">Url</Property>
+                    <Property Name="UsesPluggableAuthentication" Type="System.String">UsesPluggableAuth</Property>
+                    <Property Name="WindowsSecurityDescriptorField" Type="System.String">SecurityDescriptor</Property>
+                    <Property Name="DocaclmetaField" Type="System.String">docaclmeta</Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                </MethodInstance>
+              </MethodInstances>
+            </Method> 
+            <Method Name="GetFile" LobName="GetFile" IsStatic="true">
+              <Parameters>
+                <Parameter Name="filepath" Direction="In">
+                  <TypeDescriptor Name="filepath" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFile" IdentifierName="PathID" />
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor Name="Return" TypeName="SharePoint.Files.SearchConnector.SearchFile, SharePoint.Files.SearchConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1c8bdbf732fc20f9">
+                    <TypeDescriptors>
+                      <TypeDescriptor Name="Name" TypeName="System.String" />
+                      <TypeDescriptor Name="Path" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFile" IdentifierName="PathID" />
+                      <TypeDescriptor Name="LastModified" TypeName="System.DateTime" >
+                        <Interpretation>
+                          <NormalizeDateTime LobDateTimeMode="Unspecified" />
+                        </Interpretation>
+                      </TypeDescriptor>
+                      <TypeDescriptor Name="Url" TypeName="System.String" />
+                      <TypeDescriptor Name="UsesPluggableAuth" TypeName="System.Boolean" />
+                      <TypeDescriptor Name="SecurityDescriptor" TypeName="System.Byte[]" IsCollection="true">
+                        <TypeDescriptors>
+                          <TypeDescriptor Name="Item" TypeName="System.Byte" />
+                        </TypeDescriptors>
+                      </TypeDescriptor>
+                      <TypeDescriptor Name="docaclmeta" TypeName="System.String" />
+                      <TypeDescriptor Name="Extension" TypeName="System.String" />
+                      <TypeDescriptor Name="ContentType" TypeName="System.String" />
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="GetFileItemFinder" Type="SpecificFinder" ReturnParameterName="Return" ReturnTypeDescriptorName="Return" ReturnTypeDescriptorLevel="0">
+                  <Properties>
+                    <Property Name="DisplayUriField" Type="System.String">Url</Property>
+                    <Property Name="UsesPluggableAuthentication" Type="System.String">UsesPluggableAuth</Property>
+                    <Property Name="WindowsSecurityDescriptorField" Type="System.String">SecurityDescriptor</Property>
+                    <Property Name="DocaclmetaField" Type="System.String">docaclmeta</Property>
+                    <Property Name="LastModifiedTimeStampField" Type="System.String">LastModified</Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                </MethodInstance>
+              </MethodInstances>
+            </Method>
+            <Method Name="GetFileStream" LobName="GetFileStream" IsStatic="true">
+              <Parameters>
+                <Parameter Name="filepath" Direction="In">
+                  <TypeDescriptor Name="filepath" TypeName="System.String" IdentifierEntityNamespace="SearchFileConnector" IdentifierEntityName="SearchFile" IdentifierName="PathID" />
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                    <TypeDescriptor Name="Return" TypeName="System.IO.FileStream" />
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="GetFileStreamAccessor" Type="StreamAccessor" ReturnParameterName="Return" ReturnTypeDescriptorName="Return" ReturnTypeDescriptorLevel="0">
+                  <Properties>
+                    <Property Name="Extension" Type="System.String">Extension</Property>
+                    <Property Name="MimeTypeField" Type="System.String">ContentType</Property>
+                    <Property Name="DisplayUriField" Type="System.String">Url</Property>
+                  </Properties>
+                  <AccessControlList>
+                    <AccessControlEntry Principal="NT AUTHORITY\Authenticated Users">
+                      <Right BdcRight="Execute" />
+                    </AccessControlEntry>
+                  </AccessControlList>
+                </MethodInstance>
+              </MethodInstances>
+            </Method>
+          </Methods>
+        </Entity>
+      </Entities>
+    </LobSystem>
+  </LobSystems>
+</Model>

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Solution xmlns="http://schemas.microsoft.com/sharepoint/" SolutionId="908bc5a0-55cd-4b10-b726-ec2ce32addf7" DeploymentServerType="ApplicationServer" SharePointProductVersion="16.0">
+  <Assemblies>
+    <Assembly Location="SharePoint.Files.SearchConnector.dll" DeploymentTarget="GlobalAssemblyCache" />
+  </Assemblies>
+  <RootFiles>
+    <RootFile Location="CONFIG\SearchConnectors\SFile\model.xml" />
+    <RootFile Location="CONFIG\POWERSHELL\Registration\SharePoint.Files.SearchConnector.Cmdlets.xml" />
+  </RootFiles>
+</Solution>
