@@ -1,5 +1,5 @@
 # spidentityservice
-# SharePoint ClaimProvider (SPClaimProvider) Application for SharePoint 2013 and 2016
+# SharePoint ClaimProvider (SPClaimProvider) Application for SharePoint
 
 Publishing SharePoint on the internet, using cloud services, Office 365 has become commonplace.
 
